@@ -1,0 +1,22 @@
+[
+    {
+        "Instruction": "Sign up or login to your Supabase project dashboard.",
+        "Command": "https://supabase.com/dashboard"
+    },
+    {
+        "Instruction": "Go to Project Settings -> API.",
+        "Command": ""
+    },
+    {
+        "Instruction": "Copy the 'service_role' secret key (NOT the anon key).",
+        "Command": ""
+    },
+    {
+        "Instruction": "Add it to your .env.local file as SUPABASE_SERVICE_ROLE_KEY=ey...",
+        "Command": ""
+    },
+    {
+        "Instruction": "Run the admin creation script.",
+        "Command": "node scripts/create-admin.js"
+    }
+]

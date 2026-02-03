@@ -1,0 +1,12 @@
+[
+    {
+        "id": "admin_uuid_placeholder",
+        "email": "admin@scanmenu.com",
+        "encrypted_password": "hashed_password_placeholder_if_possible",
+        "email_confirmed_at": "2023-01-01T00:00:00Z",
+        "role": "authenticated",
+        "raw_user_meta_data": {
+            "full_name": "System Admin"
+        }
+    }
+]
