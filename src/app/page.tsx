@@ -13,8 +13,8 @@ export default function Home() {
       <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]">
-              <Zap className="text-black" size={20} fill="currentColor" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] border border-white/10 bg-zinc-900">
+              <Image src="/logo.png" alt="Hunggree Logo" width={40} height={40} className="object-cover" unoptimized />
             </div>
             <span className="text-2xl font-black italic tracking-tighter uppercase">Hunggree</span>
           </div>
@@ -64,7 +64,7 @@ export default function Home() {
                     Launch Your Brand
                   </Button>
                 </Link>
-                <Link href="/menu/demo-restaurant">
+                <Link href="/menu/pizza-360-9pa9z">
                   <Button variant="bordered" size="lg" className="h-16 px-10 font-black uppercase tracking-widest text-sm rounded-[20px] border-white/10 hover:bg-white/5 transition-all flex items-center gap-3">
                     <Play size={16} fill="white" /> See Demo
                   </Button>
@@ -219,8 +219,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2 space-y-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Zap className="text-black" size={16} fill="currentColor" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 bg-zinc-900">
+                <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-cover" unoptimized />
               </div>
               <span className="text-xl font-black italic tracking-tighter uppercase">Hunggree</span>
             </div>
@@ -230,7 +230,7 @@ export default function Home() {
             <h5 className="text-[10px] font-black uppercase tracking-widest text-white mb-6">Product</h5>
             <ul className="space-y-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
               <li><Link href="#" className="hover:text-primary transition-colors">Pricing</Link></li>
-              <li><Link href="/menu/demo-restaurant" className="hover:text-primary transition-colors">Showcase</Link></li>
+              <li><Link href="/menu/pizza-360-9pa9z" className="hover:text-primary transition-colors">Showcase</Link></li>
               <li><Link href="#" className="hover:text-primary transition-colors">API Docs</Link></li>
             </ul>
           </div>

@@ -14,6 +14,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Hunggree - Premium Digital Menus & WhatsApp Ordering',
   description: 'Boost your restaurant revenue with elite digital menus. Enable direct WhatsApp orders and luxury guest experiences.',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({
