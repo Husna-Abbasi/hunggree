@@ -98,7 +98,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-[60px] blur-3xl opacity-50" />
               <div className="relative h-full w-full rounded-[60px] overflow-hidden border border-white/10 shadow-2xl">
                 <Image
-                  src="/luxury_restaurant_interface_mockup_1770159811546.png"
+                  src="/hunggree_showcase.png"
                   alt="Hunggree Showcase"
                   fill
                   className="object-cover scale-110 hover:scale-125 transition-transform duration-[10s]"

@@ -275,11 +275,15 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
         if (!restaurant || cartItems.length === 0) return;
 
         try {
+            // Get current user if any
+            const { data: { user } } = await supabase.auth.getUser();
+
             // 1. Create the order in Supabase
             const { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
                     restaurant_id: restaurant.id,
+                    customer_id: user?.id || null,
                     total_amount: total(),
                     status: 'pending'
                 })
