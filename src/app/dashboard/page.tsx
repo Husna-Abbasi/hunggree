@@ -131,8 +131,8 @@ export default function DashboardPage() {
                         <LayoutDashboard className="text-white" size={20} />
                     </div>
                     <div>
-                        <span className="text-xl font-bold tracking-tight">ScanMenu</span>
-                        <span className="text-xs text-gray-500 block">Admin Workspace</span>
+                        <span className="text-xl font-black italic tracking-tighter uppercase">Hunggree</span>
+                        <span className="text-[10px] text-gray-500 block font-bold uppercase tracking-widest">Admin Workspace</span>
                     </div>
                 </div>
 

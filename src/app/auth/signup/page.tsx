@@ -54,7 +54,7 @@ export default function SignupPage() {
             >
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1C14]">Create Account</h1>
-                    <p className="text-default-500 mt-3 font-medium">Join ScanMenu and grow your business</p>
+                    <p className="text-default-500 mt-3 font-medium">Join Hunggree and grow your business</p>
                 </div>
 
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[40px] p-8 sm:p-10 border border-black/[0.02]">

@@ -47,7 +47,7 @@ export default function LoginPage() {
             >
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-extrabold tracking-tight text-[#1A1C14]">Welcome Back</h1>
-                    <p className="text-default-500 mt-3 font-medium">Log into your ScanMenu dashboard</p>
+                    <p className="text-default-500 mt-3 font-medium">Log into your Hunggree dashboard</p>
                 </div>
 
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[40px] p-8 sm:p-10 border border-black/[0.02]">
@@ -139,7 +139,7 @@ export default function LoginPage() {
                     </div>
 
                     <p className="text-center mt-10 text-default-500 font-medium text-sm">
-                        Don't have an account? <Link href="/auth/signup" className="text-primary font-bold hover:underline">Join ScanMenu</Link>
+                        Don't have an account? <Link href="/auth/signup" className="text-primary font-bold hover:underline">Join Hunggree</Link>
                     </p>
                 </div>
             </motion.div>

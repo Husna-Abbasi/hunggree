@@ -12,8 +12,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'ScanMenu - Digital QR Menus',
-  description: 'Connect directly with restaurants via WhatsApp.',
+  title: 'Hunggree - Premium Digital Menus & WhatsApp Ordering',
+  description: 'Boost your restaurant revenue with elite digital menus. Enable direct WhatsApp orders and luxury guest experiences.',
 };
 
 export default function RootLayout({
