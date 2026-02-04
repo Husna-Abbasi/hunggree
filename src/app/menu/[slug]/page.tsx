@@ -375,6 +375,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                     sizes="100vw"
                     className="object-cover opacity-60 scale-105 group-hover:scale-100 transition-transform duration-700 ease-out"
                     priority
+                    unoptimized={!!restaurant.cover_image_url}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
@@ -426,6 +427,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                             fill
                             sizes="(max-width: 640px) 96px, 120px"
                             className="object-cover"
+                            unoptimized={!!restaurant.logo_url}
                         />
                     </div>
                     <div className="mb-2 pb-1 flex flex-col items-center sm:items-start text-center sm:text-left">
@@ -653,6 +655,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                                             fill
                                                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                                             className="object-cover transition-transform duration-1000 group-hover/item:scale-110"
+                                                            unoptimized={!!item.image_url}
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
                                                     </div>
@@ -708,6 +711,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                                         fill
                                                         sizes="(max-width: 640px) 56px, 128px"
                                                         className="object-cover"
+                                                        unoptimized={!!item.image_url}
                                                     />
                                                 </div>
                                                 <div className="flex-grow flex flex-row items-center justify-between gap-2 sm:gap-4">
