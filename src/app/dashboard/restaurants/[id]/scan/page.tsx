@@ -86,6 +86,29 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
         }
     };
 
+    const resizeImage = (dataUrl: string, maxWidth = 1280): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = dataUrl;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7)); // Compress to 0.7
+            };
+        });
+    };
+
     const stopCamera = () => {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
@@ -94,17 +117,22 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
         setCameraActive(false);
     };
 
-    const capturePhoto = () => {
+    const capturePhoto = async () => {
         if (videoRef.current && canvasRef.current) {
             const canvas = canvasRef.current;
             const video = videoRef.current;
+
+            // Capture at video resolution first
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.drawImage(video, 0, 0);
-                const imageData = canvas.toDataURL('image/jpeg', 0.8);
-                setCapturedImage(imageData);
+                const rawData = canvas.toDataURL('image/jpeg', 0.8);
+
+                // Resize for efficiency
+                const resizedData = await resizeImage(rawData);
+                setCapturedImage(resizedData);
                 stopCamera();
             }
         }
@@ -114,8 +142,10 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                setCapturedImage(e.target?.result as string);
+            reader.onload = async (e) => {
+                const rawData = e.target?.result as string;
+                const resizedData = await resizeImage(rawData);
+                setCapturedImage(resizedData);
             };
             reader.readAsDataURL(file);
         }
@@ -158,8 +188,18 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to process image');
+                let errorMessage;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error;
+                } catch {
+                    errorMessage = `Server Error (${response.status}): ${response.statusText}`;
+                    // Special handling for 413 Payload Too Large
+                    if (response.status === 413) {
+                        errorMessage = "Image is too large. Please try a smaller image.";
+                    }
+                }
+                throw new Error(errorMessage || 'Failed to process image');
             }
 
             const data = await response.json();

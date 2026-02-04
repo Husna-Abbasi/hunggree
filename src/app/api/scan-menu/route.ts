@@ -3,34 +3,18 @@ import { NextRequest, NextResponse } from 'next/server';
 // This API endpoint processes menu images using AI vision
 // Supports both OpenAI GPT-4 Vision and Google Gemini
 
-const EXTRACTION_PROMPT = `You are a menu extraction assistant. Analyze restaurant menu images and extract all menu items with their categories, names, descriptions, and prices.
+const EXTRACTION_PROMPT = `You are a menu extraction assistant. Analyze restaurant menu images and extract all menu items.
 
 Return the data in this exact JSON format:
-{
-  "categories": [
-    {
-      "name": "Category Name",
-      "items": [
-        {
-          "name": "Item Name",
-          "description": "Item description",
-          "price": 12.99,
-          "category": "Category Name"
-        }
-      ]
-    }
-  ]
-}
+{"categories":[{"name":"Category Name","items":[{"name":"Item Name","description":"Item description","price":12.99,"category":"Category Name"}]}]}
 
 Rules:
-- Extract ALL items visible in the menu
-- Group items by their categories (Appetizers, Main Courses, Desserts, Beverages, etc.)
-- If a category isn't explicitly stated, infer it from the context
-- Prices should be numbers only (no currency symbols)
-- If price is not visible, estimate based on item type or set to 0
-- Descriptions should be concise (1-2 sentences max)
-- If no description is visible, create a brief one based on the item name
-- Return ONLY valid JSON, no other text`;
+- Extract ALL items visible.
+- Group by category.
+- Prices = numbers (0 if unknown).
+- Descriptions = max 10 words.
+- IMPORTANT: Return MINIFIED JSON (no indentation/newlines) to save space.
+- NO Markdown.`;
 
 async function processWithOpenAI(image: string, apiKey: string) {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -51,7 +35,7 @@ async function processWithOpenAI(image: string, apiKey: string) {
                     content: [
                         {
                             type: 'text',
-                            text: 'Extract all menu items from this restaurant menu image. Return the data as JSON with categories and items.'
+                            text: 'Extract menu items. Return valid minified JSON.'
                         },
                         {
                             type: 'image_url',
@@ -64,7 +48,8 @@ async function processWithOpenAI(image: string, apiKey: string) {
                 }
             ],
             max_tokens: 4096,
-            temperature: 0.2
+            temperature: 0.2,
+            response_format: { type: "json_object" }
         })
     });
 
@@ -98,7 +83,7 @@ async function processWithGemini(image: string, apiKey: string) {
                 {
                     parts: [
                         {
-                            text: `${EXTRACTION_PROMPT}\n\nExtract all menu items from this restaurant menu image. Return ONLY valid JSON with categories and items.`
+                            text: EXTRACTION_PROMPT
                         },
                         {
                             inline_data: {
@@ -111,7 +96,8 @@ async function processWithGemini(image: string, apiKey: string) {
             ],
             generationConfig: {
                 temperature: 0.2,
-                maxOutputTokens: 4096
+                maxOutputTokens: 8192,
+                response_mime_type: "application/json"
             }
         })
     });
@@ -226,36 +212,64 @@ async function processRequest(provider: string, image: string, openaiKey: string
     }
 
     // Parse the JSON response
-    // AI sometimes adds preamble or wraps it in markdown code blocks
     let jsonContent = content.trim();
 
-    // 1. Try to extract content between ```json and ```
-    const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+    // Cleanup: Remove markdown code blocks if present
+    const jsonBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     if (jsonBlockMatch) {
         jsonContent = jsonBlockMatch[1].trim();
     } else {
-        // 2. Try to extract content between any ``` and ```
-        const genericBlockMatch = content.match(/```\s*([\s\S]*?)\s*```/);
-        if (genericBlockMatch) {
-            jsonContent = genericBlockMatch[1].trim();
-        } else {
-            // 3. Last resort: find the first { and the last }
-            const firstBrace = content.indexOf('{');
-            const lastBrace = content.lastIndexOf('}');
-            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                jsonContent = content.substring(firstBrace, lastBrace + 1).trim();
-            }
+        const firstBrace = content.indexOf('{');
+        const lastBrace = content.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            jsonContent = content.substring(firstBrace, lastBrace + 1).trim();
         }
     }
 
     try {
         const extractedData = JSON.parse(jsonContent);
+
+        if (!extractedData.categories || !Array.isArray(extractedData.categories)) {
+            throw new Error("Missing 'categories' array in response");
+        }
+
         return NextResponse.json({
             ...extractedData,
             provider: provider
         });
     } catch (parseError: any) {
-        console.error('Failed to parse AI response as JSON:', jsonContent);
-        throw new Error(`AI generated an invalid menu structure. Please try again with a clearer image or different provider.`);
+        console.warn('First JSON parse attempt failed:', parseError.message);
+
+        // Attempt to repair truncated JSON
+        try {
+            // Check if it looks truncated (missing closing brackets)
+            let repairedJson = jsonContent;
+
+            // Very naive repair: try closing arrays/objects
+            const openBraces = (repairedJson.match(/\{/g) || []).length;
+            const closeBraces = (repairedJson.match(/\}/g) || []).length;
+            const openBrackets = (repairedJson.match(/\[/g) || []).length;
+            const closeBrackets = (repairedJson.match(/\]/g) || []).length;
+
+            if (openBrackets > closeBrackets) repairedJson += ']'.repeat(openBrackets - closeBrackets);
+            if (openBraces > closeBraces) repairedJson += '}'.repeat(openBraces - closeBraces);
+
+            console.log('Attempting to parse repaired JSON...');
+            const extractedData = JSON.parse(repairedJson);
+
+            if (!extractedData.categories || !Array.isArray(extractedData.categories)) {
+                return NextResponse.json({ categories: [], provider, warning: "Menu was truncated, some items may be missing." });
+            }
+
+            return NextResponse.json({
+                ...extractedData,
+                provider: provider,
+                warning: "Menu was truncated, executed repair."
+            });
+
+        } catch (repairError) {
+            console.error('Failed to parse AI response as JSON:', jsonContent);
+            throw new Error(`AI generated an invalid menu structure (${parseError.message}). Please try again with a clearer image.`);
+        }
     }
 }
