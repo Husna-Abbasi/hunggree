@@ -10,75 +10,68 @@ import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function SignupPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [fullName, setFullName] = useState("");
     const [restaurantName, setRestaurantName] = useState("");
     const [whatsappNumber, setWhatsappNumber] = useState("");
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
-    const toggleVisibility = () => setIsVisible(!isVisible);
+    const [submitted, setSubmitted] = useState(false);
 
     const router = useRouter();
     const supabase = createClient();
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Check for disallowed domains
-        const disallowedDomains = ["gmail.com", "facebook.com", "outlook.com", "hotmail.com", "yahoo.com"];
-        const domain = email.split('@')[1]?.toLowerCase();
-
-        if (disallowedDomains.includes(domain)) {
-            alert(`Please use a business email address. ${domain} is not allowed for Partner accounts.`);
-            return;
-        }
-
         setLoading(true);
 
-        // 1. Sign up the user
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: `${location.origin}/auth/callback`,
-                data: {
-                    full_name: fullName,
-                    role: 'restaurant_owner'
-                }
-            }
+        const { error } = await supabase.from('registration_requests').insert({
+            restaurant_name: restaurantName,
+            whatsapp_number: whatsappNumber,
+            address: address
         });
 
         if (error) {
-            alert(error.message);
+            alert("Error submitting request: " + error.message);
             setLoading(false);
             return;
         }
 
-        if (data.user) {
-            // 2. Create the restaurant entry immediately
-            const slug = restaurantName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 7);
-
-            const { error: restError } = await supabase.from('restaurants').insert({
-                owner_id: data.user.id,
-                name: restaurantName,
-                address: address,
-                whatsapp_number: whatsappNumber,
-                slug: slug,
-                onboarding_status: 'pending',
-                is_active: false
-            });
-
-            if (restError) {
-                console.error("Error creating restaurant:", restError);
-                // We don't block the user, they can retry adding restaurant from dashboard if this fails
-            }
-
-            router.refresh();
-            router.push("/dashboard");
-        }
+        setSubmitted(true);
+        setLoading(false);
     };
+
+    if (submitted) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-black text-white selection:bg-primary/30">
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+                </div>
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full max-w-[550px] relative z-10"
+                >
+                    <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 sm:p-10 shadow-2xl shadow-black/50 text-center">
+                        <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
+                            <Mail size={40} className="text-primary" />
+                        </div>
+                        <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-4">Request Received!</h2>
+                        <p className="text-gray-400 font-medium leading-relaxed mb-8">
+                            Your application for <strong>{restaurantName}</strong> has been sent to our verification team.
+                            <br /><br />
+                            Once approved, you will receive your credentials via WhatsApp on <strong>{whatsappNumber}</strong>.
+                        </p>
+                        <Link href="/">
+                            <Button color="primary" className="w-full font-black uppercase tracking-widest text-xs h-12 rounded-xl">
+                                Back to Home
+                            </Button>
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-black text-white selection:bg-primary/30">
@@ -105,29 +98,16 @@ export default function SignupPage() {
 
                 <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 sm:p-10 shadow-2xl shadow-black/50">
                     <form onSubmit={handleSignup} className="flex flex-col gap-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
-                                    placeholder="John Doe"
-                                    className="w-full h-14 px-5 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm text-white placeholder:text-gray-600"
-                                    required
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Restaurant Name</label>
-                                <input
-                                    type="text"
-                                    value={restaurantName}
-                                    onChange={(e) => setRestaurantName(e.target.value)}
-                                    placeholder="The Grand Bistro"
-                                    className="w-full h-14 px-5 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm text-white placeholder:text-gray-600"
-                                    required
-                                />
-                            </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Restaurant Name</label>
+                            <input
+                                type="text"
+                                value={restaurantName}
+                                onChange={(e) => setRestaurantName(e.target.value)}
+                                placeholder="The Grand Bistro"
+                                className="w-full h-14 px-5 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm text-white placeholder:text-gray-600"
+                                required
+                            />
                         </div>
 
                         <div className="flex flex-col gap-2">
@@ -154,47 +134,13 @@ export default function SignupPage() {
                             />
                         </div>
 
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Work Email</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="name@restaurant.com"
-                                className="w-full h-14 px-5 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm text-white placeholder:text-gray-600"
-                                required
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Password</label>
-                            <div className="relative group">
-                                <input
-                                    type={isVisible ? "text" : "password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Min. 8 characters"
-                                    className="w-full h-14 px-5 pr-12 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm text-white placeholder:text-gray-600"
-                                    required
-                                    minLength={8}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={toggleVisibility}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
-                                >
-                                    {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
-                            </div>
-                        </div>
-
                         <Button
                             color="primary"
                             type="submit"
                             isLoading={loading}
                             className="w-full h-16 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 mt-4 bg-primary text-black"
                         >
-                            Complete Registration
+                            Request Access
                         </Button>
                     </form>
 

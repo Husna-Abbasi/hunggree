@@ -6,11 +6,11 @@ import { useState } from "react";
 import { Button, Input, Card, CardBody } from "@heroui/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function LoginPage() {
-    const [email, setEmail] = useState("");
+    const [contactInput, setContactInput] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
@@ -22,7 +22,20 @@ export default function LoginPage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+        const isEmail = contactInput.includes('@');
+        const credentials = { password };
+
+        if (isEmail) {
+            // @ts-ignore
+            Object.assign(credentials, { email: contactInput });
+        } else {
+            // @ts-ignore
+            Object.assign(credentials, { phone: contactInput });
+        }
+
+        // @ts-ignore
+        const { error } = await supabase.auth.signInWithPassword(credentials);
         if (error) {
             alert(error.message);
             setLoading(false);
@@ -59,16 +72,16 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="flex flex-col gap-6">
                         {/* Custom Email Input */}
                         <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Work Email</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Email or Phone Number</label>
                             <div className="relative group">
                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
-                                    <Mail size={18} />
+                                    <User size={18} />
                                 </div>
                                 <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="name@restaurant.com"
+                                    type="text"
+                                    value={contactInput}
+                                    onChange={(e) => setContactInput(e.target.value)}
+                                    placeholder="name@restaurant.com or Phone Number"
                                     className="w-full h-14 pl-12 pr-4 bg-white/5 border border-white/5 rounded-2xl outline-none focus:border-primary/50 focus:bg-white/10 transition-all text-sm text-white placeholder:text-gray-600"
                                     required
                                 />

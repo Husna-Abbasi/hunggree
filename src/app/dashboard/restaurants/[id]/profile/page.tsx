@@ -113,9 +113,18 @@ export default function RestaurantProfilePage({ params }: { params: Promise<{ id
             return;
         }
 
+        // Check if user is admin
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+        const isAdmin = profile?.role === 'admin';
+
         console.log("Saving restaurant with data:", formData);
 
-        const { data: updatedRows, error } = await supabase
+        let query = supabase
             .from('restaurants')
             .update({
                 name: formData.name,
@@ -131,10 +140,14 @@ export default function RestaurantProfilePage({ params }: { params: Promise<{ id
                 whatsapp_template: formData.whatsapp_template,
                 updated_at: new Date().toISOString()
             })
-            .eq('id', restaurantId)
-            // Ensure we are the owner according to RLS
-            .eq('owner_id', user.id)
-            .select();
+            .eq('id', restaurantId);
+
+        // Only restrict to owner if NOT admin
+        if (!isAdmin) {
+            query = query.eq('owner_id', user.id);
+        }
+
+        const { data: updatedRows, error } = await query.select();
 
         if (error) {
             console.error("Supabase Update Error:", error);
