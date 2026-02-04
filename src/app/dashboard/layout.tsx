@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { useRouter, usePathname } from "next/navigation";
 import { Button, User, Chip, Spinner } from "@heroui/react";
-import { LogOut, Store, ShieldCheck, ListOrdered, Settings } from "lucide-react";
+import { LogOut, Store, ShieldCheck, ListOrdered, Settings, Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -14,9 +14,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [pendingCount, setPendingCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
     const supabase = createClient();
+
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname]);
 
     useEffect(() => {
         const getSession = async () => {
@@ -68,9 +73,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col md:flex-row font-sans">
+        <div className="min-h-screen bg-black text-white flex font-sans">
+            {/* Mobile Header */}
+            <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-xl border-b border-white/10 z-40 flex items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg shadow-primary/20 border border-white/10 bg-zinc-900">
+                        <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-cover" unoptimized />
+                    </div>
+                    <span className="text-lg font-black italic tracking-tighter uppercase">Hunggree</span>
+                </div>
+                <Button isIconOnly variant="light" onPress={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                    {isMobileMenuOpen ? <X /> : <Menu />}
+                </Button>
+            </div>
+
+            {/* Mobile Backdrop */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-full md:w-72 bg-zinc-900/50 backdrop-blur-xl border-r border-white/5 p-6 flex flex-col gap-8 sticky top-0 md:h-screen z-20">
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-72 bg-black border-r border-white/10 p-6 flex flex-col gap-8 transition-transform duration-300 ease-in-out
+                ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+                md:translate-x-0 md:static md:h-screen md:sticky md:top-0
+            `}>
                 <div className="flex items-center gap-3 px-2">
                     <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-primary/20 border border-white/10 bg-zinc-900">
                         <Image src="/logo.png" alt="Logo" width={40} height={40} className="object-cover" unoptimized />
@@ -153,8 +183,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 p-8 overflow-y-auto h-screen">
-                {children}
+            <main className="flex-1 p-4 md:p-8 pt-20 md:pt-0 overflow-y-auto h-screen w-full">
+                <div className="md:pt-8 pb-20">
+                    {children}
+                </div>
             </main>
         </div>
     );

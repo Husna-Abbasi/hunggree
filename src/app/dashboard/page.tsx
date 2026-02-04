@@ -114,14 +114,14 @@ export default function DashboardPage() {
 
     return (
         <>
-            <header className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-10">
+            <header className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6 md:mb-10">
                 <div>
                     <h1 className="text-3xl font-black italic tracking-tighter uppercase">Overview</h1>
                     <p className="text-gray-400 text-sm mt-1">Manage your restaurants and menus from one place.</p>
                 </div>
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 w-full md:w-auto"
                 >
                     <PlusCircle size={20} />
                     Add Restaurant
@@ -129,7 +129,7 @@ export default function DashboardPage() {
             </header>
 
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-10">
                 {[
                     { label: "Total Restaurants", value: restaurants.length, icon: Store, color: "text-primary" },
                     { label: "Active Orders", value: "0", icon: ListOrdered, color: "text-secondary" },
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-8">
                     {restaurants.map(rest => (
                         <motion.div
                             key={rest.id}

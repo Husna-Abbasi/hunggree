@@ -320,42 +320,43 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Header */}
+            {/* Header */}
             <header className="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur-xl border-b border-white/5">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
                         <Link href="/dashboard" className="p-2 hover:bg-white/5 rounded-xl transition-colors">
                             <ArrowLeft size={20} />
                         </Link>
                         <div>
-                            <h1 className="text-xl font-bold">{restaurant?.name}</h1>
+                            <h1 className="text-xl font-bold line-clamp-1">{restaurant?.name}</h1>
                             <p className="text-xs text-gray-400">Menu Management</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Link href={`/dashboard/restaurants/${restaurantId}/scan`}>
-                            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /><path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" /></svg>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <Link href={`/dashboard/restaurants/${restaurantId}/scan`} className="w-full sm:w-auto">
+                            <button className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                                <Sparkles size={16} />
                                 Hunggree AI Scanner
                             </button>
                         </Link>
-                        <Link href={`/menu/${restaurant?.slug}`} target="_blank">
-                            <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm transition-colors">
-                                Preview Menu →
+                        <Link href={`/menu/${restaurant?.slug}`} target="_blank" className="w-full sm:w-auto">
+                            <button className="w-full sm:w-auto px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                                Preview Menu <ArrowLeft className="rotate-180" size={14} />
                             </button>
                         </Link>
                     </div>
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="max-w-7xl mx-auto p-4 md:p-6">
                 {/* Sub-Navigation */}
-                <div className="flex p-1 bg-zinc-900 rounded-2xl border border-white/5 w-fit mb-10">
-                    <button className="px-6 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-lg shadow-blue-500/20 flex items-center gap-2">
+                <div className="w-full md:w-fit grid grid-cols-2 md:flex bg-zinc-900 rounded-2xl border border-white/5 p-1 mb-8 gap-1">
+                    <button className="px-6 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
                         <Layout size={18} />
                         Menu
                     </button>
                     <Link href={`/dashboard/restaurants/${restaurantId}/profile`}>
-                        <button className="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white transition-all flex items-center gap-2">
+                        <button className="w-full px-6 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2">
                             <Store size={18} />
                             Profile
                         </button>

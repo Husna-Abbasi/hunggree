@@ -322,23 +322,32 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
                 )}
 
                 {/* Step Indicator */}
-                <div className="flex items-center justify-center gap-4 mb-8">
+                {/* Step Indicator */}
+                <div className="relative flex items-center justify-between mb-10 w-full max-w-lg mx-auto px-4">
+                    {/* Background Line */}
+                    <div className="absolute left-4 right-4 top-4 h-0.5 bg-zinc-800 -z-0" />
+
                     {[
                         { key: 'capture', label: 'Capture' },
                         { key: 'processing', label: 'AI Processing' },
-                        { key: 'review', label: 'Review & Save' }
-                    ].map((s, idx) => (
-                        <div key={s.key} className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === s.key ? 'bg-blue-600 text-white' :
-                                (step === 'review' && idx < 2) || (step === 'processing' && idx === 0) ? 'bg-green-500 text-white' :
-                                    'bg-zinc-800 text-gray-400'
-                                }`}>
-                                {(step === 'review' && idx < 2) || (step === 'processing' && idx === 0) ? <Check size={16} /> : idx + 1}
+                        { key: 'review', label: 'Review' }
+                    ].map((s, idx) => {
+                        const isActive = step === s.key;
+                        const isCompleted = (step === 'review' && idx < 2) || (step === 'processing' && idx === 0);
+
+                        return (
+                            <div key={s.key} className="flex flex-col items-center gap-2 relative z-10">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-4 border-black transition-colors ${isActive || isCompleted ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-gray-500'
+                                    }`}>
+                                    {isCompleted ? <Check size={14} /> : idx + 1}
+                                </div>
+                                <span className={`text-[10px] md:text-xs font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-white' : 'text-gray-600'
+                                    }`}>
+                                    {s.label}
+                                </span>
                             </div>
-                            <span className={`text-sm ${step === s.key ? 'text-white' : 'text-gray-500'}`}>{s.label}</span>
-                            {idx < 2 && <div className="w-8 h-px bg-zinc-700" />}
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Step Content */}
