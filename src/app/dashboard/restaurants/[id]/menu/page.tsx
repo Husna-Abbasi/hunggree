@@ -8,6 +8,8 @@ import { ArrowLeft, Plus, Trash2, Edit2, GripVertical, Image as ImageIcon, Store
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
 import Image from "next/image";
+import ImageUpload from "@/components/ImageUpload";
+import RestaurantTabs from "@/components/RestaurantTabs";
 
 interface Category {
     id: string;
@@ -320,7 +322,6 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Header */}
-            {/* Header */}
             <header className="sticky top-0 z-10 bg-zinc-900/80 backdrop-blur-xl border-b border-white/5">
                 <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4 w-full md:w-auto">
@@ -350,18 +351,7 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
 
             <div className="max-w-7xl mx-auto p-4 md:p-6">
                 {/* Sub-Navigation */}
-                <div className="w-full md:w-fit grid grid-cols-2 md:flex bg-zinc-900 rounded-2xl border border-white/5 p-1 mb-8 gap-1">
-                    <button className="px-6 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
-                        <Layout size={18} />
-                        Menu
-                    </button>
-                    <Link href={`/dashboard/restaurants/${restaurantId}/profile`}>
-                        <button className="w-full px-6 py-2.5 rounded-xl text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                            <Store size={18} />
-                            Profile
-                        </button>
-                    </Link>
-                </div>
+                <RestaurantTabs restaurantId={restaurantId} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Categories Sidebar */}
@@ -395,20 +385,20 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                             {categories.length === 0 ? (
                                 <p className="text-gray-500 text-sm text-center py-8">No categories yet</p>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {categories.map(cat => (
                                         <div
                                             key={cat.id}
-                                            className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${activeCategory === cat.id
+                                            className={`group flex items-center justify-between p-4 rounded-xl cursor-pointer transition-colors ${activeCategory === cat.id
                                                 ? 'bg-blue-600/20 border border-blue-500/30'
                                                 : 'hover:bg-white/5 border border-transparent'
                                                 }`}
                                             onClick={() => setActiveCategory(cat.id)}
                                         >
-                                            <div className="flex items-center gap-2">
-                                                <GripVertical size={14} className="text-gray-500" />
-                                                <span className="font-medium text-sm">{cat.name}</span>
-                                                <Chip size="sm" variant="flat" className="ml-1">
+                                            <div className="flex items-center gap-3">
+                                                <GripVertical size={16} className="text-gray-500" />
+                                                <span className="font-medium text-base">{cat.name}</span>
+                                                <Chip size="sm" variant="flat" className="ml-2">
                                                     {items.filter(i => i.category_id === cat.id).length}
                                                 </Chip>
                                             </div>
@@ -619,15 +609,15 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1.5">Image URL</label>
-                                <input
-                                    type="url"
-                                    placeholder="https://example.com/image.jpg"
+                                <ImageUpload
+                                    label="Item Image"
                                     value={itemForm.image_url}
-                                    onChange={(e) => setItemForm({ ...itemForm, image_url: e.target.value })}
-                                    className="w-full px-4 py-3 bg-zinc-800 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+                                    onChange={(url) => setItemForm({ ...itemForm, image_url: url })}
+                                    placeholder="https://example.com/image.jpg"
+                                    itemName={itemForm.name}
+                                    itemDescription={itemForm.description}
+                                    itemCategory={categories.find(c => c.id === activeCategory)?.name}
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Paste an image URL (e.g., from Unsplash)</p>
                             </div>
                             <div className="flex items-center gap-3">
                                 <input

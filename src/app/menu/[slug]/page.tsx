@@ -6,10 +6,11 @@ import { Button, Card, CardBody, Chip, Modal, ModalContent, ModalHeader, ModalBo
 import { useCartStore } from "@/store/useCartStore";
 import { createClient } from "@/lib/supabase-browser";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Plus, Minus, ChevronLeft, Search, Filter, Clock, X, Info, LayoutGrid, List, Sun, Moon, Trash2, ChevronDown, Sparkles } from "lucide-react";
+import { ShoppingBag, Plus, Minus, ChevronLeft, Search, Filter, Clock, X, Info, LayoutGrid, List, Sun, Moon, Trash2, ChevronDown, Sparkles, QrCode } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { formatPrice } from "@/lib/utils";
+import QrStickerModal from "@/components/QrStickerModal";
 
 interface Restaurant {
     id: string;
@@ -55,6 +56,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
     const [sortBy, setSortBy] = useState<"none" | "price-asc" | "price-desc" | "time">("none");
     const [viewMode, setViewMode] = useState<"list" | "grid">("list");
     const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number] | null>(null);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     const supabase = createClient();
 
@@ -388,6 +390,14 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                     >
                         {theme === 'dark' ? <Sun size={20} className="text-foreground" /> : <Moon size={20} className="text-foreground" />}
+                    </Button>
+                    <Button
+                        isIconOnly
+                        variant="flat"
+                        className="bg-background/40 backdrop-blur-md rounded-2xl border border-divider"
+                        onClick={() => setIsQrModalOpen(true)}
+                    >
+                        <QrCode size={20} className="text-foreground" />
                     </Button>
                 </div>
 
@@ -788,6 +798,12 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                     )
                 }
             </AnimatePresence >
+
+            <QrStickerModal
+                isOpen={isQrModalOpen}
+                onClose={() => setIsQrModalOpen(false)}
+                restaurant={restaurant}
+            />
 
             {/* Luxury Sidebar/Cart */}
             <Modal

@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { QRCodeCanvas } from "qrcode.react";
+import QrStickerModal from "@/components/QrStickerModal";
 
 export default function DashboardPage() {
     const [session, setSession] = useState<any>(null);
@@ -91,17 +91,6 @@ export default function DashboardPage() {
             setNewRestValues({ name: "", address: "", whatsapp: "", description: "" });
         }
         setIsCreating(false);
-    };
-
-    const downloadQRCode = () => {
-        const canvas = document.getElementById("qr-code-canvas") as HTMLCanvasElement;
-        if (canvas) {
-            const url = canvas.toDataURL("image/png");
-            const link = document.createElement("a");
-            link.download = `${qrModal.restaurant?.name.replace(/\s+/g, '-').toLowerCase()}-qr.png`;
-            link.href = url;
-            link.click();
-        }
     };
 
     if (loading) {
@@ -343,213 +332,11 @@ export default function DashboardPage() {
             )}
 
             {/* QR Code Modal / Sticker Designer */}
-            <AnimatePresence>
-                {qrModal.isOpen && qrModal.restaurant && (
-                    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-black/90 backdrop-blur-xl"
-                            onClick={() => setQrModal({ isOpen: false, restaurant: null })}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative w-full max-w-[500px] flex flex-col gap-6"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex justify-between items-center px-4">
-                                <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">Sticker Design</h2>
-                                <button
-                                    onClick={() => setQrModal({ isOpen: false, restaurant: null })}
-                                    className="p-2 hover:bg-white/10 rounded-full text-white transition-colors"
-                                >
-                                    <X size={24} />
-                                </button>
-                            </div>
-
-                            {/* The "Sticker" Preview */}
-                            <div className="flex justify-center perspective-1000">
-                                <div
-                                    id="printable-sticker"
-                                    className="relative bg-zinc-900 w-[320px] h-[480px] rounded-[32px] border-[6px] border-[#C5A059] shadow-2xl flex flex-col items-center justify-between py-12 px-8 overflow-hidden transform transition-transform hover:scale-[1.02] duration-500"
-                                    style={{
-                                        boxShadow: "0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 2px #4a3b1d"
-                                    }}
-                                >
-                                    {/* Embossed / Metallic Effect Overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
-
-                                    {/* Top Text */}
-                                    <div className="text-center space-y-3 z-10 w-full px-4">
-                                        <p className="text-[#C5A059] text-xs font-black tracking-[0.4em] uppercase">Scan For Menu</p>
-                                        <h3 className="text-white text-3xl font-black uppercase tracking-tighter italic drop-shadow-lg leading-none">
-                                            {qrModal.restaurant.name}
-                                        </h3>
-                                        {/* Description & Location */}
-                                        <div className="space-y-1">
-                                            {qrModal.restaurant.description && (
-                                                <p className="text-gray-400 text-[10px] font-medium leading-tight line-clamp-2 px-2 italic">
-                                                    "{qrModal.restaurant.description}"
-                                                </p>
-                                            )}
-                                            {qrModal.restaurant.address && (
-                                                <div className="flex items-center justify-center gap-1 text-gray-500">
-                                                    <MapPin size={10} />
-                                                    <p className="text-[9px] font-bold uppercase tracking-wider">{qrModal.restaurant.address}</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* QR Code Frame */}
-                                    <div className="relative p-3 bg-white rounded-3xl shadow-[0_0_30px_rgba(197,160,89,0.2)] z-10 mt-2">
-                                        <div className="border-[3px] border-black rounded-2xl overflow-hidden">
-                                            <QRCodeCanvas
-                                                id="qr-code-canvas"
-                                                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/menu/${qrModal.restaurant.slug}`}
-                                                size={160}
-                                                level="H"
-                                                includeMargin={true}
-                                                imageSettings={{
-                                                    src: qrModal.restaurant.logo_url || "",
-                                                    x: undefined,
-                                                    y: undefined,
-                                                    height: 35,
-                                                    width: 35,
-                                                    excavate: true,
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Bottom Branding */}
-                                    <div className="text-center z-10">
-                                        <div className="flex items-center justify-center gap-2 text-[#C5A059] opacity-80 mb-2">
-                                            <div className="w-12 h-[1px] bg-[#C5A059]" />
-                                            <Store size={14} />
-                                            <div className="w-12 h-[1px] bg-[#C5A059]" />
-                                        </div>
-                                        <p className="text-gray-500 text-[9px] font-bold tracking-[0.3em] uppercase">Powered by Hunggree</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <Button
-                                    size="lg"
-                                    className="bg-[#C5A059] text-black font-black uppercase tracking-widest shadow-xl shadow-yellow-900/20"
-                                    startContent={<div className="p-1 bg-black/10 rounded-full"><Download size={16} /></div>}
-                                    onPress={() => {
-                                        // Print Logic
-                                        const printContent = document.getElementById('printable-sticker');
-                                        if (printContent) {
-                                            const win = window.open('', '', 'height=800,width=600');
-                                            if (win) {
-                                                win.document.write(`
-                                                    <html>
-                                                        <head>
-                                                            <title>Print Sticker - ${qrModal.restaurant.name}</title>
-                                                            <style>
-                                                                body { 
-                                                                    display: flex; 
-                                                                    justify-content: center; 
-                                                                    align-items: center; 
-                                                                    height: 100vh; 
-                                                                    background: #f0f0f0; 
-                                                                    margin: 0;
-                                                                    font-family: system-ui, -apple-system, sans-serif;
-                                                                }
-                                                                #sticker-container {
-                                                                    transform: scale(1.5); /* Scale up for print quality */
-                                                                }
-                                                                /* Replicate Tailwind Styles roughly for Print */
-                                                                .sticker {
-                                                                    position: relative;
-                                                                    width: 320px;
-                                                                    height: 480px;
-                                                                    background-color: #18181b;
-                                                                    border-radius: 32px;
-                                                                    border: 6px solid #C5A059;
-                                                                    display: flex;
-                                                                    flex-direction: column;
-                                                                    align-items: center;
-                                                                    justify-content: space-between;
-                                                                    padding: 40px 24px;
-                                                                    box-sizing: border-box;
-                                                                    color: white;
-                                                                    overflow: hidden;
-                                                                }
-                                                                .top-text { text-align: center; width: 100%; }
-                                                                .label { color: #C5A059; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; font-weight: 900; margin-bottom: 8px; }
-                                                                .name { font-size: 26px; font-weight: 900; text-transform: uppercase; font-style: italic; line-height: 1.1; margin: 0; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-                                                                
-                                                                .details { margin-top: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-                                                                .desc { font-size: 10px; color: #aaa; font-style: italic; max-width: 90%; line-height: 1.2; text-align: center; }
-                                                                .address { font-size: 8px; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 0.1em; display: flex; align-items: center; gap: 4px; }
-                                                                
-                                                                .qr-box { padding: 10px; background: white; border-radius: 24px; margin-top: 10px; }
-                                                                .qr-border { border: 3px solid black; border-radius: 16px; overflow: hidden; display: flex; }
-                                                                .bottom { text-align: center; }
-                                                                .powered { color: #888; font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; margin-top: 8px; }
-                                                            </style>
-                                                        </head>
-                                                        <body>
-                                                            <div id="sticker-container">
-                                                                <div class="sticker">
-                                                                    <div class="top-text">
-                                                                        <div class="label">Scan For Menu</div>
-                                                                        <div class="name">${qrModal.restaurant.name}</div>
-                                                                        <div class="details">
-                                                                            ${qrModal.restaurant.description ? `<div class="desc">"${qrModal.restaurant.description}"</div>` : ''}
-                                                                            ${qrModal.restaurant.address ? `<div class="address">📍 ${qrModal.restaurant.address}</div>` : ''}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="qr-box">
-                                                                        <div class="qr-border">
-                                                                            <img src="${(document.getElementById('qr-code-canvas') as HTMLCanvasElement)?.toDataURL()}" width="160" height="160" />
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="bottom">
-                                                                        <div class="powered">Powered by Hunggree</div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <script>
-                                                                window.onload = function() { window.print(); window.close(); }
-                                                            </script>
-                                                        </body>
-                                                    </html>
-                                                `);
-                                                win.document.close();
-                                            }
-                                        }
-                                    }}
-                                >
-                                    Print Sticker
-                                </Button>
-                                <Button
-                                    size="lg"
-                                    variant="bordered"
-                                    className="border-white/20 text-white font-bold"
-                                    onPress={() => {
-                                        if (typeof window !== 'undefined') {
-                                            navigator.clipboard.writeText(`${window.location.origin}/menu/${qrModal.restaurant.slug}`);
-                                            alert("Public Menu Link copied!");
-                                        }
-                                    }}
-                                >
-                                    Copy Link
-                                </Button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            <QrStickerModal
+                isOpen={qrModal.isOpen}
+                onClose={() => setQrModal({ isOpen: false, restaurant: null })}
+                restaurant={qrModal.restaurant}
+            />
         </>
     );
 }
