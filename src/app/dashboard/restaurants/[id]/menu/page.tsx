@@ -499,7 +499,7 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                                                     </span>
                                                 </div>
                                                 {item.description && (
-                                                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">{item.description}</p>
+                                                    <p className="text-xs text-gray-400 mb-3">{item.description}</p>
                                                 )}
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button

@@ -699,7 +699,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                                 <div className="flex-grow flex flex-row items-center justify-between gap-2 sm:gap-4">
                                                     <div className="flex-grow flex flex-col gap-0.5 min-w-0">
                                                         <h4 className="text-sm sm:text-2xl font-black text-foreground uppercase tracking-tight leading-tight line-clamp-2 mb-0.5">{item.name}</h4>
-                                                        <p className="text-[10px] sm:text-sm font-medium text-default-500 line-clamp-1 sm:line-clamp-2 leading-tight">{item.description || "A signature selection from our culinary team."}</p>
+                                                        <p className="text-[10px] sm:text-sm font-medium text-default-500 leading-tight">{item.description || "A signature selection from our culinary team."}</p>
                                                         <div className="flex items-center gap-3 mt-1 underline-offset-4">
                                                             <div className="flex items-center gap-1.5 text-secondary text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                                                                 <Clock size={11} className="sm:w-3 sm:h-3" />
