@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Plus, Minus, ChevronLeft, Search, Filter, Clock, X, Info, LayoutGrid, List, Sun, Moon, Trash2, ChevronDown, Sparkles, QrCode } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, optimizeImage } from "@/lib/utils";
 import QrStickerModal from "@/components/QrStickerModal";
 
 interface Restaurant {
@@ -369,9 +369,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
             {/* Header / Hero */}
             <div className="relative h-[35vh] min-h-[300px] w-full group overflow-hidden">
                 <Image
-                    src={restaurant.cover_image_url || "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2000"}
+                    src={optimizeImage(restaurant.cover_image_url) || "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2000"}
                     alt="Cover"
                     fill
+                    sizes="100vw"
                     className="object-cover opacity-60 scale-105 group-hover:scale-100 transition-transform duration-700 ease-out"
                     priority
                 />
@@ -420,9 +421,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                 <div className="absolute bottom-6 sm:bottom-10 left-0 right-0 px-6 sm:px-8 flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 text-foreground">
                     <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden border-4 border-background shadow-2xl bg-content1 shrink-0 transform sm:-rotate-3 hover:rotate-0 transition-transform duration-500">
                         <Image
-                            src={restaurant.logo_url || "https://images.unsplash.com/photo-1522333323558-4446b30f7e17?q=80&w=200"}
+                            src={optimizeImage(restaurant.logo_url) || "https://images.unsplash.com/photo-1522333323558-4446b30f7e17?q=80&w=200"}
                             alt="Logo"
                             fill
+                            sizes="(max-width: 640px) 96px, 120px"
                             className="object-cover"
                         />
                     </div>
@@ -646,9 +648,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                                 <div className="flex flex-col h-full">
                                                     <div className="relative aspect-square w-full rounded-2xl sm:rounded-[40px] overflow-hidden bg-background mb-4 sm:mb-8 mt-[-8%] sm:mt-[-15%] shadow-2xl">
                                                         <Image
-                                                            src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800"}
+                                                            src={optimizeImage(item.image_url) || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800"}
                                                             alt={item.name}
                                                             fill
+                                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                                             className="object-cover transition-transform duration-1000 group-hover/item:scale-110"
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
@@ -700,9 +703,10 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                             >
                                                 <div className="relative w-14 h-14 sm:w-32 sm:h-32 rounded-xl sm:rounded-3xl overflow-hidden bg-background shrink-0 shadow-sm sm:shadow-xl border border-divider group-hover/list:scale-105 transition-transform duration-700">
                                                     <Image
-                                                        src={item.image_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400"}
+                                                        src={optimizeImage(item.image_url) || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=400"}
                                                         alt={item.name}
                                                         fill
+                                                        sizes="(max-width: 640px) 56px, 128px"
                                                         className="object-cover"
                                                     />
                                                 </div>

@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Button, Input, Spinner } from "@heroui/react";
 import { Image as ImageIcon, Upload, X, Link as LinkIcon, Sparkles } from "lucide-react";
 import Image from "next/image";
+import { optimizeImage } from "@/lib/utils";
 
 interface ImageUploadProps {
     value?: string | null;
@@ -246,11 +247,11 @@ export default function ImageUpload({
                 <div className="relative group">
                     <div className="w-full h-48 bg-zinc-800 rounded-xl border border-white/10 overflow-hidden relative">
                         <Image
-                            src={value!}
+                            src={optimizeImage(value!)}
                             alt="Uploaded image"
                             fill
+                            sizes="(max-width: 640px) 100vw, 400px"
                             className="object-cover"
-                            unoptimized // Since IPFS URLs might not be optimized by Next.js by default
                         />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                             <Button

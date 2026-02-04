@@ -23,6 +23,6 @@ export async function uploadToPinata(file: Blob, filename: string): Promise<stri
     }
 
     const json = await res.json();
-    const gateway = process.env.NEXT_PUBLIC_GATEWAY_URL || "gateway.pinata.cloud";
+    const gateway = process.env.NEXT_PUBLIC_GATEWAY_URL || "cloudflare-ipfs.com";
     return `https://${gateway}/ipfs/${json.IpfsHash}`;
 }

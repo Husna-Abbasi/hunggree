@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Spinner, Chip } from "@heroui/react";
 import { ArrowLeft, Plus, Trash2, Edit2, GripVertical, Image as ImageIcon, Store, Tag, DollarSign, Save, X, Layout, Search, Filter, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, optimizeImage } from "@/lib/utils";
 import Image from "next/image";
 import ImageUpload from "@/components/ImageUpload";
 import RestaurantTabs from "@/components/RestaurantTabs";
@@ -461,7 +461,7 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                                             {/* Image */}
                                             <div className="h-32 bg-zinc-700 relative">
                                                 {item.image_url ? (
-                                                    <Image src={item.image_url} alt={item.name} fill className="object-cover" />
+                                                    <Image src={optimizeImage(item.image_url)} alt={item.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
                                                         <ImageIcon size={32} className="text-zinc-600" />
