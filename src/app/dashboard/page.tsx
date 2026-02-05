@@ -7,7 +7,7 @@ import {
     Button, Card, CardBody, Spinner, Chip,
 } from "@heroui/react";
 import {
-    PlusCircle, QrCode, MapPin, Phone, Store, DollarSign, ListOrdered, Clock, Download, X, ExternalLink, Sparkles
+    PlusCircle, QrCode, MapPin, Phone, Store, DollarSign, ListOrdered, Clock, Download, X, ExternalLink, Sparkles, Search
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,6 +20,12 @@ export default function DashboardPage() {
     const [session, setSession] = useState<any>(null);
     const [restaurants, setRestaurants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredRestaurants = restaurants.filter(rest =>
+        rest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        rest.whatsapp_number.includes(searchTerm)
+    );
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -161,10 +167,22 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            <h2 className="text-xl font-black italic uppercase tracking-tighter mb-6 flex items-center gap-3">
-                <Store size={20} className="text-primary" />
-                Your Restaurants
-            </h2>
+            <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 gap-4">
+                <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-3">
+                    <Store size={20} className="text-primary" />
+                    Your Restaurants
+                </h2>
+                <div className="relative w-full md:w-64">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+                    />
+                </div>
+            </div>
 
             {restaurants.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-32 bg-zinc-900/30 rounded-[40px] border border-dashed border-zinc-800">
@@ -180,9 +198,14 @@ export default function DashboardPage() {
                         Create First Restaurant
                     </button>
                 </div>
+            ) : filteredRestaurants.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-zinc-900/30 rounded-[32px] border border-dashed border-zinc-800">
+                    <Search className="text-gray-600 mb-4" size={32} />
+                    <p className="text-gray-500 font-medium">No results found for "{searchTerm}"</p>
+                </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-8">
-                    {restaurants.map(rest => (
+                    {filteredRestaurants.map(rest => (
                         <motion.div
                             key={rest.id}
                             initial={{ opacity: 0, y: 20 }}

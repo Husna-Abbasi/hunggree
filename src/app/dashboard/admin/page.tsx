@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { Button, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
-import { CheckCircle, AlertCircle, MapPin, Phone } from "lucide-react";
+import { CheckCircle, AlertCircle, MapPin, Phone, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,8 @@ export default function AdminPage() {
     const [pendingRequests, setPendingRequests] = useState<any[]>([]);
     const [activeRestaurants, setActiveRestaurants] = useState<any[]>([]);
     const [view, setView] = useState<'pending' | 'active'>('pending');
+    const [searchTerm, setSearchTerm] = useState("");
+    const [locationFilter, setLocationFilter] = useState("");
     const [isProcessingApproval, setIsProcessingApproval] = useState<string | null>(null);
     const [generatedCredentials, setGeneratedCredentials] = useState<any | null>(null);
 
@@ -21,6 +23,23 @@ export default function AdminPage() {
         fetchPendingRequests();
         fetchActiveRestaurants();
     }, []);
+
+    // Filter Logic
+    const getFilteredData = (data: any[]) => {
+        return data.filter(item => {
+            const matchesSearch = searchTerm === "" ||
+                (item.restaurant_name || item.name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.whatsapp_number?.includes(searchTerm);
+
+            const matchesLocation = locationFilter === "" ||
+                item.address?.toLowerCase().includes(locationFilter.toLowerCase());
+
+            return matchesSearch && matchesLocation;
+        });
+    };
+
+    const filteredPending = getFilteredData(pendingRequests);
+    const filteredActive = getFilteredData(activeRestaurants);
 
     const fetchPendingRequests = async () => {
         const { data: pending, error } = await supabase
@@ -122,18 +141,46 @@ export default function AdminPage() {
                 </button>
             </div>
 
+            {/* Search and Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search by name or phone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+                    />
+                </div>
+                <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Filter by city or address..."
+                        value={locationFilter}
+                        onChange={(e) => setLocationFilter(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-zinc-900 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-primary transition-colors"
+                    />
+                </div>
+            </div>
+
             {view === 'pending' ? (
                 <div className="grid grid-cols-1 gap-6">
-                    {pendingRequests.length === 0 ? (
+                    {filteredPending.length === 0 ? (
                         <div className="bg-zinc-900/50 border border-white/5 rounded-[40px] p-20 flex flex-col items-center justify-center text-center">
                             <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-6 text-green-500">
                                 <CheckCircle size={40} />
                             </div>
-                            <h3 className="text-2xl font-black italic uppercase tracking-tighter">Everything Current</h3>
-                            <p className="text-gray-500 max-w-sm mt-2">No pending onboarding requests at this time. Great job staying on top of it!</p>
+                            <h3 className="text-2xl font-black italic uppercase tracking-tighter">No Results Found</h3>
+                            <p className="text-gray-500 max-w-sm mt-2">
+                                {pendingRequests.length === 0
+                                    ? "No pending onboarding requests at this time."
+                                    : "Try adjusting your search or filters."}
+                            </p>
                         </div>
                     ) : (
-                        pendingRequests.map(req => (
+                        filteredPending.map(req => (
                             <motion.div
                                 key={req.id}
                                 initial={{ opacity: 0, x: -20 }}
@@ -188,7 +235,7 @@ export default function AdminPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-6">
-                    {activeRestaurants.map(rest => (
+                    {filteredActive.map(rest => (
                         <motion.div
                             key={rest.id}
                             initial={{ opacity: 0, x: -20 }}
