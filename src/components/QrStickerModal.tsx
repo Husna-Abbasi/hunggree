@@ -2,7 +2,8 @@ import { useState } from "react";
 import { X, MapPin, Store, Download, Sun, Moon } from "lucide-react";
 import { Button, cn } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { QRCodeCanvas } from "qrcode.react";
+import { toPng } from 'html-to-image';
+import { QRCodeSVG } from "qrcode.react";
 
 interface QrStickerModalProps {
     isOpen: boolean;
@@ -18,10 +19,29 @@ interface QrStickerModalProps {
 
 export default function QrStickerModal({ isOpen, onClose, restaurant }: QrStickerModalProps) {
     const [stickerTheme, setStickerTheme] = useState<'dark' | 'light'>('dark');
+    const [isDownloading, setIsDownloading] = useState(false);
 
     if (!restaurant) return null;
 
     const isDark = stickerTheme === 'dark';
+
+    const handleDownloadImage = async () => {
+        setIsDownloading(true);
+        const node = document.getElementById('printable-sticker');
+        if (node) {
+            try {
+                const dataUrl = await toPng(node, { cacheBust: true, pixelRatio: 2 });
+                const link = document.createElement('a');
+                link.download = `${restaurant.slug}-sticker.png`;
+                link.href = dataUrl;
+                link.click();
+            } catch (err) {
+                console.error('Failed to download image', err);
+                alert("Failed to generate image. Please try again.");
+            }
+        }
+        setIsDownloading(false);
+    };
 
     return (
         <AnimatePresence>
@@ -90,12 +110,16 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                 }}
                             >
                                 {/* Embossed / Metallic Effect Overlay - Dark Only */}
-                                {isDark && (
-                                    <>
-                                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none" />
-                                    </>
-                                )}
+                                <>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                                    <div
+                                        className="absolute inset-0 opacity-10 pointer-events-none"
+                                        style={{
+                                            backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
+                                            backgroundSize: '16px 16px'
+                                        }}
+                                    />
+                                </>
 
                                 {/* Top Text */}
                                 <div className="text-center space-y-3 z-10 w-full px-4">
@@ -139,21 +163,21 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                     isDark ? "bg-white shadow-[0_0_30px_rgba(197,160,89,0.2)]" : "bg-black text-white shadow-xl"
                                 )}>
                                     <div className="border-[3px] border-black rounded-2xl overflow-hidden bg-white">
-                                        <QRCodeCanvas
-                                            id="qr-code-canvas"
+                                        <QRCodeSVG
+                                            id="qr-code-svg"
                                             value={`${typeof window !== 'undefined' ? window.location.origin : ''}/menu/${restaurant.slug}`}
                                             size={160}
                                             level="H"
                                             includeMargin={true}
-                                            imageSettings={{
-                                                src: restaurant.logo_url || "",
+                                            imageSettings={restaurant.logo_url ? {
+                                                src: restaurant.logo_url,
                                                 x: undefined,
                                                 y: undefined,
                                                 height: 35,
                                                 width: 35,
                                                 excavate: true,
                                                 crossOrigin: "anonymous",
-                                            }}
+                                            } : undefined}
                                         />
                                     </div>
                                 </div>
@@ -180,8 +204,16 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                         <div className="grid grid-cols-2 gap-4">
                             <Button
                                 size="lg"
-                                className="bg-[#C5A059] text-black font-black uppercase tracking-widest shadow-xl shadow-yellow-900/20"
+                                className="bg-[#C5A059] text-black font-black uppercase tracking-widest shadow-xl shadow-yellow-900/20 col-span-2"
                                 startContent={<div className="p-1 bg-black/10 rounded-full"><Download size={16} /></div>}
+                                onPress={handleDownloadImage}
+                                isLoading={isDownloading}
+                            >
+                                {isDownloading ? "Generating..." : "Download Image"}
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="bg-zinc-800 text-white font-black uppercase tracking-widest border border-white/10"
                                 onPress={() => {
                                     // Print Logic
                                     const printContent = document.getElementById('printable-sticker');
@@ -282,7 +314,7 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                                                 </div>
                                                                 <div class="qr-box">
                                                                     <div class="qr-border">
-                                                                        <img src="${(document.getElementById('qr-code-canvas') as HTMLCanvasElement)?.toDataURL()}" width="160" height="160" />
+                                                                        <img src="${'data:image/svg+xml;base64,' + btoa(new XMLSerializer().serializeToString(document.getElementById('qr-code-svg') as Node))}" width="160" height="160" />
                                                                     </div>
                                                                 </div>
                                                                 <div class="bottom">
