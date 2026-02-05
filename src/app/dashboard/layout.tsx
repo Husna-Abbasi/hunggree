@@ -164,15 +164,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         Orders <Chip size="sm" color="danger" variant="flat" className="ml-auto h-5">0</Chip>
                     </Button>
 
-                    <Button
-                        variant={pathname?.includes('/settings') ? "solid" : "light"}
-                        color={pathname?.includes('/settings') ? "primary" : "default"}
-                        className={`w-full justify-start font-medium ${pathname?.includes('/settings') ? "text-white" : "text-gray-400 hover:text-white"}`}
-                        startContent={<Settings size={18} />}
-                        onPress={() => router.push('/dashboard/settings')}
-                    >
-                        Settings
-                    </Button>
+                    {profile?.role === 'admin' && (
+                        <Button
+                            variant={pathname?.includes('/settings') ? "solid" : "light"}
+                            color={pathname?.includes('/settings') ? "primary" : "default"}
+                            className={`w-full justify-start font-medium ${pathname?.includes('/settings') ? "text-white" : "text-gray-400 hover:text-white"}`}
+                            startContent={<Settings size={18} />}
+                            onPress={() => router.push('/dashboard/settings')}
+                        >
+                            Settings
+                        </Button>
+                    )}
                 </nav>
 
                 <div className="border-t border-white/5 pt-4">
