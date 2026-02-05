@@ -24,18 +24,21 @@ export default function LoginPage() {
         setLoading(true);
 
         const isEmail = contactInput.includes('@');
-        const credentials = { password };
+        let emailToUse = contactInput;
 
-        if (isEmail) {
-            // @ts-ignore
-            Object.assign(credentials, { email: contactInput });
-        } else {
-            // @ts-ignore
-            Object.assign(credentials, { phone: contactInput });
+        if (!isEmail) {
+            // Phone Login Strategy: "Shadow Email"
+            // We convert the phone number to the shadow email format used by the backend
+            // This allows us to use Supabase's always-enabled Email Auth provider
+            const cleanPhone = contactInput.replace(/\D/g, '');
+            emailToUse = `${cleanPhone}@login.hunggree`;
         }
 
-        // @ts-ignore
-        const { error } = await supabase.auth.signInWithPassword(credentials);
+        const { error } = await supabase.auth.signInWithPassword({
+            email: emailToUse,
+            password
+        });
+
         if (error) {
             alert(error.message);
             setLoading(false);

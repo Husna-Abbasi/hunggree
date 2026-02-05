@@ -52,13 +52,18 @@ export async function POST(request: Request) {
         // UNLESS the prompt explicitly asked for phone login (it did).
         // The previous login page update sends { phone: ... }, so we should try to create a user with that phone.
 
+        // STRATEGY: "Shadow Email"
+        // We implicitly enable Phone Login by creating an email user: "PHONE_NUMBER@login.hunggree"
+        // This bypasses the need for the Supabase Phone Provider to be enabled.
+        const shadowEmail = `${cleanPhone}@login.hunggree`;
+
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-            phone: cleanPhone,
+            email: shadowEmail,
             password: generatedPassword,
             email_confirm: true,
-            phone_confirm: true,
             user_metadata: {
-                role: 'restaurant_owner'
+                role: 'restaurant_owner',
+                phone: cleanPhone // Store real phone in metadata
             }
         });
 
