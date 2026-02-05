@@ -22,6 +22,7 @@ export default function OnboardingWizard({ restaurantId, restaurantName, onCompl
     const [isProcessing, setIsProcessing] = useState(false);
     const [extractedData, setExtractedData] = useState<any>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const uploadInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient();
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,7 +166,7 @@ export default function OnboardingWizard({ restaurantId, restaurantName, onCompl
                                     </button>
 
                                     <button
-                                        onClick={() => fileInputRef.current?.click()}
+                                        onClick={() => uploadInputRef.current?.click()}
                                         className="flex flex-col items-center gap-3 p-6 bg-zinc-800 border border-white/5 rounded-2xl hover:bg-zinc-700 transition-colors group"
                                     >
                                         <Upload size={32} className="text-gray-400 group-hover:text-white transition-colors" />
@@ -180,6 +181,13 @@ export default function OnboardingWizard({ restaurantId, restaurantName, onCompl
                                         className="hidden"
                                         accept="image/*"
                                         capture="environment"
+                                        onChange={handleFileSelect}
+                                    />
+                                    <input
+                                        type="file"
+                                        ref={uploadInputRef}
+                                        className="hidden"
+                                        accept="image/*"
                                         onChange={handleFileSelect}
                                     />
                                 </div>
