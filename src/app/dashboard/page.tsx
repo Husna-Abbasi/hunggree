@@ -7,12 +7,14 @@ import {
     Button, Card, CardBody, Spinner, Chip,
 } from "@heroui/react";
 import {
-    PlusCircle, QrCode, MapPin, Phone, Store, DollarSign, ListOrdered, Clock, Download, X, ExternalLink
+    PlusCircle, QrCode, MapPin, Phone, Store, DollarSign, ListOrdered, Clock, Download, X, ExternalLink, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import QrStickerModal from "@/components/QrStickerModal";
+
+import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
 export default function DashboardPage() {
     const [session, setSession] = useState<any>(null);
@@ -24,6 +26,11 @@ export default function DashboardPage() {
     const [qrModal, setQrModal] = useState<{ isOpen: boolean, restaurant: any | null }>({ isOpen: false, restaurant: null });
     const [newRestValues, setNewRestValues] = useState({ name: "", address: "", whatsapp: "", description: "" });
     const [isCreating, setIsCreating] = useState(false);
+
+    // Onboarding Wizard State
+    const [showOnboarding, setShowOnboarding] = useState<{ isOpen: boolean, restaurantId: string, restaurantName: string }>({
+        isOpen: false, restaurantId: "", restaurantName: ""
+    });
 
     const router = useRouter();
     const supabase = createClient();
@@ -46,10 +53,13 @@ export default function DashboardPage() {
         // Fetch Profile Role first to determine access
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', userId).single();
 
-        // Fetch Restaurants
+        // Fetch Restaurants with menu_item count
         let query = supabase
             .from('restaurants')
-            .select('*')
+            .select(`
+                *,
+                menu_items:items(count)
+            `)
             .order('created_at', { ascending: false });
 
         // Only restrict to owner_id if NOT admin
@@ -58,7 +68,22 @@ export default function DashboardPage() {
         }
 
         const { data: rests } = await query;
-        if (rests) setRestaurants(rests);
+        if (rests) {
+            setRestaurants(rests);
+
+            // Check for onboarding trigger (For everyone, if they have restaurants but 0 items)
+            if (rests.length > 0) {
+                // Find the first restaurant with 0 items
+                const emptyRest = rests.find((r: any) => r.menu_items?.[0]?.count === 0);
+                if (emptyRest && !localStorage.getItem(`skip_onboarding_${emptyRest.id}`)) {
+                    setShowOnboarding({
+                        isOpen: true,
+                        restaurantId: emptyRest.id,
+                        restaurantName: emptyRest.name
+                    });
+                }
+            }
+        }
 
         setLoading(false);
     };
@@ -220,15 +245,31 @@ export default function DashboardPage() {
                                                     <Link href={`/dashboard/restaurants/${rest.id}/menu`} className="w-full">
                                                         <Button size="sm" color="primary" variant="solid" className="w-full font-black uppercase tracking-widest text-[10px] rounded-xl h-10 text-black" endContent={<PlusCircle size={14} />}>Manage</Button>
                                                     </Link>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="bordered"
-                                                        className="w-full text-white border-white/10 hover:bg-white/5 rounded-xl h-10 font-bold uppercase tracking-widest text-[10px]"
-                                                        startContent={<QrCode size={14} />}
-                                                        onPress={() => setQrModal({ isOpen: true, restaurant: rest })}
-                                                    >
-                                                        QR Code
-                                                    </Button>
+                                                    {rest.menu_items?.[0]?.count === 0 ? (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="bordered"
+                                                            className="w-full text-white border-white/10 hover:bg-white/5 rounded-xl h-10 font-bold uppercase tracking-widest text-[10px]"
+                                                            startContent={<Sparkles size={14} />}
+                                                            onPress={() => setShowOnboarding({
+                                                                isOpen: true,
+                                                                restaurantId: rest.id,
+                                                                restaurantName: rest.name
+                                                            })}
+                                                        >
+                                                            Auto Setup
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="bordered"
+                                                            className="w-full text-white border-white/10 hover:bg-white/5 rounded-xl h-10 font-bold uppercase tracking-widest text-[10px]"
+                                                            startContent={<QrCode size={14} />}
+                                                            onPress={() => setQrModal({ isOpen: true, restaurant: rest })}
+                                                        >
+                                                            QR Code
+                                                        </Button>
+                                                    )}
                                                 </>
                                             ) : rest.onboarding_status === 'pending' ? (
                                                 <div className="col-span-2 p-3 bg-primary/10 border border-primary/20 rounded-xl text-center">
@@ -331,12 +372,28 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* QR Code Modal / Sticker Designer */}
             <QrStickerModal
                 isOpen={qrModal.isOpen}
                 onClose={() => setQrModal({ isOpen: false, restaurant: null })}
                 restaurant={qrModal.restaurant}
             />
+
+            {/* AI Onboarding Wizard */}
+            {showOnboarding.isOpen && (
+                <OnboardingWizard
+                    restaurantId={showOnboarding.restaurantId}
+                    restaurantName={showOnboarding.restaurantName}
+                    onComplete={() => {
+                        setShowOnboarding({ ...showOnboarding, isOpen: false });
+                        fetchRestaurants(session.user.id); // Refresh to verify items added
+                    }}
+                    onClose={() => {
+                        setShowOnboarding({ ...showOnboarding, isOpen: false });
+                        // Remember skip choice for session
+                        localStorage.setItem(`skip_onboarding_${showOnboarding.restaurantId}`, 'true');
+                    }}
+                />
+            )}
         </>
     );
 }
