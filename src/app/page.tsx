@@ -72,8 +72,14 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative pt-32 lg:pt-40 pb-20 px-6">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full -z-10">
-            <div className="absolute top-20 left-10 w-40 h-40 lg:w-72 lg:h-72 bg-primary/20 rounded-full blur-[80px] lg:blur-[120px]" />
-            <div className="absolute bottom-20 right-10 w-60 h-60 lg:w-96 lg:h-96 bg-secondary/10 rounded-full blur-[100px] lg:blur-[150px]" />
+            <div
+              className="absolute top-20 left-10 w-40 h-40 lg:w-72 lg:h-72 rounded-full opacity-50"
+              style={{ background: 'radial-gradient(circle, rgba(92, 111, 43, 0.4) 0%, transparent 70%)' }}
+            />
+            <div
+              className="absolute bottom-20 right-10 w-60 h-60 lg:w-96 lg:h-96 rounded-full opacity-50"
+              style={{ background: 'radial-gradient(circle, rgba(222, 128, 43, 0.2) 0%, transparent 70%)' }}
+            />
           </div>
 
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">

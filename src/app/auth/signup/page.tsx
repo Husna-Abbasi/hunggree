@@ -43,8 +43,14 @@ export default function SignupPage() {
         return (
             <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-black text-white selection:bg-primary/30">
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+                    <div
+                        className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full opacity-50"
+                        style={{ background: 'radial-gradient(circle, rgba(var(--primary-rgb), 0.4) 0%, transparent 70%)' }}
+                    />
+                    <div
+                        className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full opacity-50"
+                        style={{ background: 'radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, transparent 70%)' }}
+                    />
                 </div>
 
                 <motion.div
@@ -52,7 +58,7 @@ export default function SignupPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full max-w-[550px] relative z-10"
                 >
-                    <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 sm:p-10 shadow-2xl shadow-black/50 text-center">
+                    <div className="bg-zinc-900/60 backdrop-blur-md md:backdrop-blur-xl border border-white/10 rounded-[40px] p-8 sm:p-10 shadow-2xl shadow-black/50 text-center">
                         <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
                             <Mail size={40} className="text-primary" />
                         </div>
@@ -77,8 +83,14 @@ export default function SignupPage() {
         <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-black text-white selection:bg-primary/30">
             {/* Background Decorative Elements */}
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
+                <div
+                    className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full opacity-50"
+                    style={{ background: 'radial-gradient(circle, rgba(var(--primary-rgb), 0.4) 0%, transparent 70%)' }}
+                />
+                <div
+                    className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full opacity-50"
+                    style={{ background: 'radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, transparent 70%)' }}
+                />
             </div>
 
             <motion.div
@@ -96,7 +108,7 @@ export default function SignupPage() {
                     <p className="text-gray-400 font-medium italic tracking-wide">Join Hunggree and digitalize your menu</p>
                 </div>
 
-                <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 sm:p-10 shadow-2xl shadow-black/50">
+                <div className="bg-zinc-900/60 backdrop-blur-md md:backdrop-blur-xl border border-white/10 rounded-[40px] p-8 sm:p-10 shadow-2xl shadow-black/50">
                     <form onSubmit={handleSignup} className="flex flex-col gap-6">
                         <div className="flex flex-col gap-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Restaurant Name</label>

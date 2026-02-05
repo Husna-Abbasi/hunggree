@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Title is required" }, { status: 400 });
         }
 
-        const prompt = `Professional food photography of ${title}. 
-            Category: ${category || "Food"}. 
-            Description: ${description || title}. 
+        const prompt = `Professional food photography of  ${title}.
+            Category: (${category} || "Food").
+            Description: (${description} || title).
             Style: High-end restaurant menu photo, 8k resolution, photorealistic, delicious, appetizing, soft lighting, shallow depth of field, plated beautifully on a table. 
             Do not include text or people. Focus solely on the dish.`;
 
