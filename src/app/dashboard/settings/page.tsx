@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Spinner } from "@heroui/react";
 import {
     ArrowLeft, Settings, Sparkles, Key, Check, Eye, EyeOff,
-    Save, AlertCircle
+    Save, AlertCircle, HardDrive, Download
 } from "lucide-react";
 import Link from "next/link";
 
@@ -69,6 +69,33 @@ export default function SettingsPage() {
             } catch (e) {
                 console.error('Failed to parse settings:', e);
             }
+        }
+    };
+
+    const [exporting, setExporting] = useState(false);
+
+    const handleExportDatabase = async () => {
+        if (!confirm("Are you sure you want to download a full backup of the database? This might take a few seconds.")) return;
+
+        setExporting(true);
+        try {
+            const response = await fetch('/api/admin/database/export');
+            if (!response.ok) throw new Error('Export failed');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `hunggree_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Export error:', error);
+            alert('Failed to export database.');
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -279,6 +306,42 @@ export default function SettingsPage() {
                                 </>
                             )}
                         </button>
+                    </div>
+                </div>
+
+                {/* Data Management Section */}
+                <div className="bg-zinc-900 rounded-2xl border border-red-500/20 overflow-hidden">
+                    <div className="p-6 border-b border-white/5 flex items-start gap-4">
+                        <div className="p-3 bg-red-500/10 rounded-xl text-red-500">
+                            <HardDrive size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white">Data Management</h2>
+                            <p className="text-sm text-gray-400 mt-1">
+                                Tools for database recovery and migration.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="p-6">
+                        <div className="flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5">
+                            <div>
+                                <h3 className="font-bold text-white">Export Database</h3>
+                                <p className="text-xs text-gray-500 mt-1">Download all data (Restaurants, Menus, Orders, Users) as JSON.</p>
+                            </div>
+                            <button
+                                onClick={handleExportDatabase}
+                                disabled={exporting}
+                                className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
+                            >
+                                {exporting ? <Spinner size="sm" color="default" /> : <Download size={16} />}
+                                {exporting ? 'Exporting...' : 'Download Backup'}
+                            </button>
+                        </div>
+                        <p className="text-xs text-red-400 mt-4 flex items-center gap-2">
+                            <AlertCircle size={14} />
+                            Warning: This file contains sensitive user data. Handle with care.
+                        </p>
                     </div>
                 </div>
 

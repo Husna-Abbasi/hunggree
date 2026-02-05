@@ -6,11 +6,12 @@ import { Button, Card, CardBody, Chip, Modal, ModalContent, ModalHeader, ModalBo
 import { useCartStore } from "@/store/useCartStore";
 import { createClient } from "@/lib/supabase-browser";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Plus, Minus, ChevronLeft, Search, Filter, Clock, X, Info, LayoutGrid, List, Sun, Moon, Trash2, ChevronDown, Sparkles, QrCode } from "lucide-react";
+import { ShoppingBag, Plus, Minus, ChevronLeft, Search, Filter, Clock, X, Info, LayoutGrid, List, Sun, Moon, Trash2, ChevronDown, Sparkles, QrCode, Gift } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { formatPrice, optimizeImage } from "@/lib/utils";
 import QrStickerModal from "@/components/QrStickerModal";
+import LoyaltyJoinModal from "@/components/LoyaltyJoinModal";
 
 interface Restaurant {
     id: string;
@@ -57,6 +58,7 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
     const [viewMode, setViewMode] = useState<"list" | "grid">("list");
     const [selectedPriceRange, setSelectedPriceRange] = useState<[number, number] | null>(null);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+    const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
 
     const supabase = createClient();
 
@@ -400,6 +402,14 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                         onClick={() => setIsQrModalOpen(true)}
                     >
                         <QrCode size={20} className="text-foreground" />
+                    </Button>
+                    <Button
+                        isIconOnly
+                        variant="flat"
+                        className="bg-background/40 backdrop-blur-md rounded-2xl border border-divider"
+                        onClick={() => setIsLoyaltyModalOpen(true)}
+                    >
+                        <Gift size={20} className="text-foreground" />
                     </Button>
                 </div>
 
@@ -927,6 +937,34 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                     )}
                 </ModalContent>
             </Modal >
+
+            <AnimatePresence>
+                {isQrModalOpen && restaurant && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                            onClick={() => setIsQrModalOpen(false)}
+                        />
+                        <QrStickerModal
+                            isOpen={isQrModalOpen}
+                            onClose={() => setIsQrModalOpen(false)}
+                            restaurant={restaurant}
+                        />
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {restaurant && (
+                <LoyaltyJoinModal
+                    isOpen={isLoyaltyModalOpen}
+                    onClose={() => setIsLoyaltyModalOpen(false)}
+                    restaurantId={restaurant.id}
+                    restaurantName={restaurant.name}
+                />
+            )}
         </div >
     );
 }

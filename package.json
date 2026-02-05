@@ -14,7 +14,9 @@
     "@supabase/ssr": "^0.8.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.31.0",
+    "google-auth-library": "^10.5.0",
     "html-to-image": "^1.11.13",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "next-auth": "^4.24.13",
@@ -28,6 +30,7 @@
   "devDependencies": {
     "@supabase/supabase-js": "^2.94.0",
     "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

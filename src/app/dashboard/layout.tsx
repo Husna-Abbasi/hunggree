@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { useRouter, usePathname } from "next/navigation";
 import { Button, User, Chip, Spinner } from "@heroui/react";
-import { LogOut, Store, ShieldCheck, ListOrdered, Settings, Menu, X } from "lucide-react";
+import { LogOut, Store, ShieldCheck, ListOrdered, Settings, Menu, X, Gift } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -159,6 +159,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             )}
                         </Button>
                     )}
+
+                    <Button
+                        variant={pathname === '/dashboard/loyalty' ? "solid" : "light"}
+                        color={pathname === '/dashboard/loyalty' ? "primary" : "default"}
+                        className={`w-full justify-start font-medium ${pathname === '/dashboard/loyalty' ? "text-white" : "text-gray-400 hover:text-white"}`}
+                        startContent={<Gift size={18} />}
+                        onPress={() => router.push('/dashboard/loyalty')}
+                    >
+                        Loyalty Program
+                    </Button>
 
                     <Button variant="light" className="justify-start text-gray-400 hover:text-white" startContent={<ListOrdered size={18} />}>
                         Orders <Chip size="sm" color="danger" variant="flat" className="ml-auto h-5">0</Chip>

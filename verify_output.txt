@@ -1,0 +1,17 @@
+[dotenv@17.2.3] injecting env (8) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+Verifying Database State...
+Auth Users: 4
+Profiles: 3 (Error: None)
+Restaurants: 5 (Error: None)
+
+Checking Admin Users:
+- User: admin@scanmenu.com
+  ID: b2f21393-4996-4f7c-b279-4fa5d3a1e1f6
+  Profile Role: admin
+  Owned Restaurants: 4
+- User: admin@scanme.com
+  ID: 349473a9-7208-4e09-82a8-6d99d7ab94d5
+  Profile Role: undefined
+  Owned Restaurants: 0
+
+Orphaned Restaurants (Invalid Owner ID): 0
