@@ -4,24 +4,49 @@ import jwt from 'jsonwebtoken';
 const ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID;
 const CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
 
-// Robust Private Key Handling: Support both raw PEM and full JSON Service Account file
-let rawKey = process.env.GOOGLE_PRIVATE_KEY;
-let parsedKey = rawKey;
+// Robust Private Key Handling with multiple parsing approaches
+function parsePrivateKey(raw: string | undefined): string | undefined {
+    if (!raw) return undefined;
 
-if (rawKey?.trim().startsWith('{')) {
-    try {
-        const json = JSON.parse(rawKey);
-        if (json.private_key) {
-            parsedKey = json.private_key;
+    let key = raw;
+
+    // 1. If it's a JSON object (full service account file), extract private_key
+    if (key.trim().startsWith('{')) {
+        try {
+            const json = JSON.parse(key);
+            if (json.private_key) {
+                key = json.private_key;
+            }
+        } catch (e) {
+            console.warn("GOOGLE_PRIVATE_KEY looks like JSON but failed to parse");
         }
-    } catch (e) {
-        console.warn("Failed to parse GOOGLE_PRIVATE_KEY as JSON, using as string.");
     }
+
+    // 2. Handle various newline formats
+    // Replace literal \n strings with actual newlines
+    key = key.replace(/\\n/g, '\n');
+
+    // 3. Remove surrounding quotes if present (some env systems add them)
+    if ((key.startsWith('"') && key.endsWith('"')) ||
+        (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+        // After removing quotes, process newlines again
+        key = key.replace(/\\n/g, '\n');
+    }
+
+    // 4. Normalize line endings
+    key = key.replace(/\r\n/g, '\n');
+
+    // Debug: Log key format (safe - only shows structure, not actual key content)
+    const hasBegin = key.includes('-----BEGIN');
+    const hasEnd = key.includes('-----END');
+    const lineCount = key.split('\n').length;
+    console.log(`[GoogleWallet] Key parsing: hasBegin=${hasBegin}, hasEnd=${hasEnd}, lines=${lineCount}`);
+
+    return key;
 }
 
-// Handle Vercel's literal \n strings - convert to actual newlines
-// The regex handles both escaped \\n and literal backslash-n from env vars
-const PRIVATE_KEY = parsedKey?.split(String.raw`\n`).join('\n');
+const PRIVATE_KEY = parsePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
 
 if (!ISSUER_ID || !CLIENT_EMAIL || !PRIVATE_KEY) {
     console.warn("Missing Google Wallet credentials. Loyalty features will not work.");
@@ -44,9 +69,8 @@ export class GoogleWalletService {
 
     static async createLoyaltyClass(programId: string, programName: string, issuerName: string, logoUrl?: string) {
         const client = await this.getClient();
-        const url = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass`; // Generic endpoint
+        const url = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass`;
 
-        // Class ID format: issuerId.programId
         const classId = `${ISSUER_ID}.${programId}`;
 
         const loyaltyClass = {
@@ -56,12 +80,10 @@ export class GoogleWalletService {
             programLogo: logoUrl ? {
                 sourceUri: { uri: logoUrl }
             } : undefined,
-            reviewStatus: 'UNDER_REVIEW', // Start as Draft/Under Review
+            reviewStatus: 'UNDER_REVIEW',
         };
 
         try {
-            // Check if exists first (GET) or just try transparently? 
-            // API throws 409 if exists. We can just create and catch 409.
             const res = await client.request({
                 url,
                 method: 'POST',
@@ -69,7 +91,7 @@ export class GoogleWalletService {
             });
             return classId;
         } catch (e: any) {
-            if (e.response?.status === 409) return classId; // Already exists
+            if (e.response?.status === 409) return classId;
             throw e;
         }
     }
@@ -77,7 +99,6 @@ export class GoogleWalletService {
     static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string) {
         if (!PRIVATE_KEY || !CLIENT_EMAIL || !ISSUER_ID) throw new Error("Missing Credentials");
 
-        // Define the Loyalty Object
         const loyaltyObject = {
             id: `${ISSUER_ID}.${objectId}`,
             classId: classId,
@@ -85,7 +106,7 @@ export class GoogleWalletService {
             accountId: userId,
             barcode: {
                 type: 'QR_CODE',
-                value: userId, // Use User ID as barcode value
+                value: userId,
                 alternateText: userId,
             },
             loyaltyPoints: {
@@ -95,7 +116,6 @@ export class GoogleWalletService {
             accountName: 'Member',
         };
 
-        // Construct the JWT Claims
         const claims = {
             iss: CLIENT_EMAIL,
             aud: 'google',
@@ -106,7 +126,6 @@ export class GoogleWalletService {
             }
         };
 
-        // Sign the JWT
         const token = jwt.sign(claims, PRIVATE_KEY, { algorithm: 'RS256' });
         return `https://pay.google.com/gp/v/save/${token}`;
     }
