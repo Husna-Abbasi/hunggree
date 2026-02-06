@@ -19,7 +19,9 @@ if (rawKey?.trim().startsWith('{')) {
     }
 }
 
-const PRIVATE_KEY = parsedKey?.replace(/\\n/g, '\n');
+// Handle Vercel's literal \n strings - convert to actual newlines
+// The regex handles both escaped \\n and literal backslash-n from env vars
+const PRIVATE_KEY = parsedKey?.split(String.raw`\n`).join('\n');
 
 if (!ISSUER_ID || !CLIENT_EMAIL || !PRIVATE_KEY) {
     console.warn("Missing Google Wallet credentials. Loyalty features will not work.");
