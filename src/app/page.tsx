@@ -272,17 +272,15 @@ export default function Home() {
           <div>
             <h5 className="text-[10px] font-black uppercase tracking-widest text-white mb-6">Product</h5>
             <ul className="space-y-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-              <li><Link href="#" className="hover:text-primary transition-colors">Pricing</Link></li>
               <li><Link href="/menu/pizza-360-9pa9z" className="hover:text-primary transition-colors">Showcase</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">API Docs</Link></li>
             </ul>
           </div>
           <div>
             <h5 className="text-[10px] font-black uppercase tracking-widest text-white mb-6">Company</h5>
             <ul className="space-y-4 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
-              <li><Link href="#" className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Privacy</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors">Terms</Link></li>
+              <li><Link href="/support" className="hover:text-primary transition-colors">Support</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link></li>
+              <li><Link href="/terms" className="hover:text-primary transition-colors">Terms</Link></li>
             </ul>
           </div>
         </div>
