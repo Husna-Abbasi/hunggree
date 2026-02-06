@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MapPin, Store, Download, Sun, Moon } from "lucide-react";
+import { X, MapPin, Store, Download, Sun, Moon, Sparkles } from "lucide-react";
 import { Button, cn } from "@heroui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toPng } from 'html-to-image';
@@ -18,12 +18,14 @@ interface QrStickerModalProps {
 }
 
 export default function QrStickerModal({ isOpen, onClose, restaurant }: QrStickerModalProps) {
-    const [stickerTheme, setStickerTheme] = useState<'dark' | 'light'>('dark');
+    const [stickerTheme, setStickerTheme] = useState<'dark' | 'light' | 'appealing'>('dark');
     const [isDownloading, setIsDownloading] = useState(false);
 
     if (!restaurant) return null;
 
     const isDark = stickerTheme === 'dark';
+    const isLight = stickerTheme === 'light';
+    const isAppealing = stickerTheme === 'appealing';
 
     const handleDownloadImage = async () => {
         setIsDownloading(true);
@@ -77,12 +79,19 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                 id="printable-sticker"
                                 className={cn(
                                     "relative w-[320px] h-[480px] rounded-[32px] border-[6px] shadow-2xl flex flex-col items-center justify-between py-12 px-8 overflow-hidden transform transition-transform hover:scale-[1.02] duration-500",
-                                    isDark ? "bg-zinc-900 border-[#C5A059]" : "bg-white border-black"
+                                    isDark && "bg-zinc-900 border-[#C5A059]",
+                                    isLight && "bg-white border-black",
+                                    isAppealing && "border-[#D4145A]"
                                 )}
                                 style={{
                                     boxShadow: isDark
                                         ? "0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 2px #4a3b1d"
-                                        : "0 20px 50px rgba(0,0,0,0.1), inset 0 0 0 2px #000000"
+                                        : isAppealing
+                                            ? "0 20px 60px rgba(212,20,90,0.35), inset 0 0 0 2px #e8527a"
+                                            : "0 20px 50px rgba(0,0,0,0.1), inset 0 0 0 2px #000000",
+                                    ...(isAppealing && {
+                                        background: "linear-gradient(135deg, #D4145A 0%, #FF6B35 35%, #FBB03B 70%, #8CC63F 100%)"
+                                    })
                                 }}
                             >
                                 {/* Embossed / Metallic Effect Overlay - Dark Only */}
@@ -99,16 +108,33 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                     </>
                                 )}
 
+                                {/* Appealing theme decorative elements */}
+                                {isAppealing && (
+                                    <>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                                        <div className="absolute top-4 right-4 text-white/80 animate-pulse">
+                                            <Sparkles size={24} />
+                                        </div>
+                                        <div className="absolute bottom-4 left-4 text-white/80 animate-pulse">
+                                            <Sparkles size={20} />
+                                        </div>
+                                    </>
+                                )}
+
                                 {/* Top Text */}
                                 <div className="text-center space-y-3 z-10 w-full px-4">
                                     <p className={cn(
                                         "text-xs font-black tracking-[0.4em] uppercase",
-                                        isDark ? "text-[#C5A059]" : "text-black/60"
+                                        isDark && "text-[#C5A059]",
+                                        isLight && "text-black/60",
+                                        isAppealing && "text-white/90"
                                     )}>Scan For Menu</p>
 
                                     <h3 className={cn(
                                         "text-3xl font-black uppercase tracking-tighter italic drop-shadow-lg leading-none",
-                                        isDark ? "text-white" : "text-black"
+                                        isDark && "text-white",
+                                        isLight && "text-black",
+                                        isAppealing && "text-white"
                                     )}>
                                         {restaurant.name}
                                     </h3>
@@ -118,7 +144,9 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                         {restaurant.description && (
                                             <p className={cn(
                                                 "text-[10px] font-medium leading-tight line-clamp-2 px-2 italic",
-                                                isDark ? "text-gray-400" : "text-gray-500"
+                                                isDark && "text-gray-400",
+                                                isLight && "text-gray-500",
+                                                isAppealing && "text-white/80"
                                             )}>
                                                 "{restaurant.description}"
                                             </p>
@@ -126,7 +154,9 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                         {restaurant.address && (
                                             <div className={cn(
                                                 "flex items-center justify-center gap-1",
-                                                isDark ? "text-gray-500" : "text-gray-600"
+                                                isDark && "text-gray-500",
+                                                isLight && "text-gray-600",
+                                                isAppealing && "text-white/70"
                                             )}>
                                                 <MapPin size={10} />
                                                 <p className="text-[9px] font-bold uppercase tracking-wider">{restaurant.address}</p>
@@ -138,7 +168,9 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                 {/* QR Code Frame */}
                                 <div className={cn(
                                     "relative p-3 rounded-3xl z-10 mt-2",
-                                    isDark ? "bg-white shadow-[0_0_30px_rgba(197,160,89,0.2)]" : "bg-black text-white shadow-xl"
+                                    isDark && "bg-white shadow-[0_0_30px_rgba(197,160,89,0.2)]",
+                                    isLight && "bg-black text-white shadow-xl",
+                                    isAppealing && "bg-white shadow-[0_0_40px_rgba(255,255,255,0.3)]"
                                 )}>
                                     <div className="border-[3px] border-black rounded-2xl overflow-hidden bg-white">
                                         <QRCodeSVG
@@ -164,15 +196,29 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                 <div className="text-center z-10">
                                     <div className={cn(
                                         "flex items-center justify-center gap-2 opacity-80 mb-2",
-                                        isDark ? "text-[#C5A059]" : "text-black"
+                                        isDark && "text-[#C5A059]",
+                                        isLight && "text-black",
+                                        isAppealing && "text-white"
                                     )}>
-                                        <div className={cn("w-12 h-[1px]", isDark ? "bg-[#C5A059]" : "bg-black")} />
+                                        <div className={cn(
+                                            "w-12 h-[1px]",
+                                            isDark && "bg-[#C5A059]",
+                                            isLight && "bg-black",
+                                            isAppealing && "bg-white/60"
+                                        )} />
                                         <Store size={14} />
-                                        <div className={cn("w-12 h-[1px]", isDark ? "bg-[#C5A059]" : "bg-black")} />
+                                        <div className={cn(
+                                            "w-12 h-[1px]",
+                                            isDark && "bg-[#C5A059]",
+                                            isLight && "bg-black",
+                                            isAppealing && "bg-white/60"
+                                        )} />
                                     </div>
                                     <p className={cn(
                                         "text-[9px] font-bold tracking-[0.3em] uppercase",
-                                        isDark ? "text-gray-500" : "text-gray-400"
+                                        isDark && "text-gray-500",
+                                        isLight && "text-gray-400",
+                                        isAppealing && "text-white/70"
                                     )}>Powered by Hunggree</p>
                                 </div>
                             </div>
@@ -193,24 +239,33 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
 
                             {/* Theme Toggle - Centered on Mobile */}
                             <div className="flex justify-center sm:justify-start">
-                                <div className="bg-zinc-800 p-1 rounded-full flex gap-1 border border-white/10">
+                                <div className="bg-zinc-800 p-1 rounded-full flex flex-wrap gap-1 border border-white/10">
                                     <button
                                         onClick={() => setStickerTheme('dark')}
                                         className={cn(
-                                            "px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all",
+                                            "px-3 py-2 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-all",
                                             isDark ? "bg-black text-[#C5A059] shadow-lg" : "text-gray-400 hover:text-white"
                                         )}
                                     >
-                                        <Moon size={14} /> Dark
+                                        <Moon size={12} /> Dark
                                     </button>
                                     <button
                                         onClick={() => setStickerTheme('light')}
                                         className={cn(
-                                            "px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-all",
-                                            !isDark ? "bg-white text-black shadow-lg" : "text-gray-400 hover:text-white"
+                                            "px-3 py-2 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-all",
+                                            isLight ? "bg-white text-black shadow-lg" : "text-gray-400 hover:text-white"
                                         )}
                                     >
-                                        <Sun size={14} /> Light
+                                        <Sun size={12} /> Light
+                                    </button>
+                                    <button
+                                        onClick={() => setStickerTheme('appealing')}
+                                        className={cn(
+                                            "px-3 py-2 rounded-full flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-all",
+                                            isAppealing ? "bg-gradient-to-r from-[#D4145A] via-[#FBB03B] to-[#8CC63F] text-white shadow-lg" : "text-gray-400 hover:text-white"
+                                        )}
+                                    >
+                                        <Sparkles size={12} /> Vibrant
                                     </button>
                                 </div>
                             </div>
@@ -224,7 +279,7 @@ export default function QrStickerModal({ isOpen, onClose, restaurant }: QrSticke
                                     onPress={handleDownloadImage}
                                     isLoading={isDownloading}
                                 >
-                                    {isDownloading ? "Generating..." : "Download Image"}
+                                    {isDownloading ? "Generating..." : "Download Sticker"}
                                 </Button>
                                 <div className="grid grid-cols-2 gap-3">
                                     <Button
