@@ -71,7 +71,7 @@ export async function POST(req: Request) {
                 updated_at: new Date().toISOString()
             })
             .eq('id', cardId)
-            .select('*, user_id')
+            .select('*, user_id, member_name')
             .single();
 
         if (updateError) throw updateError;
@@ -83,7 +83,8 @@ export async function POST(req: Request) {
                     updatedCard.google_object_id,
                     newPoints,
                     program?.google_class_id,
-                    updatedCard.user_id
+                    updatedCard.user_id,
+                    updatedCard.member_name
                 );
             } catch (walletError) {
                 console.error('Wallet sync failed:', walletError);

@@ -42,7 +42,7 @@ export async function GET(req: Request) {
         // Get loyalty cards (without join to avoid errors)
         const { data: cards, error: cardsError } = await supabase
             .from('loyalty_cards')
-            .select('id, current_points, total_points_earned, created_at, updated_at, user_id, google_object_id')
+            .select('id, current_points, total_points_earned, created_at, updated_at, user_id, google_object_id, member_name')
             .eq('restaurant_id', restaurantId)
             .order('updated_at', { ascending: false });
 

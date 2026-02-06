@@ -11,6 +11,7 @@ interface LoyaltyCustomerCardProps {
         total_points_earned: number;
         updated_at: string;
         google_object_id: string | null;
+        member_name: string | null;
         profiles: {
             id: string;
             full_name: string | null;
@@ -99,7 +100,7 @@ export default function LoyaltyCustomerCard({
                     </div>
                     <div>
                         <h3 className="font-bold text-white">
-                            {customer.profiles?.full_name || 'Anonymous User'}
+                            {customer.member_name || customer.profiles?.full_name || 'Anonymous User'}
                         </h3>
                         {customer.profiles?.phone && (
                             <p className="text-xs text-gray-500 flex items-center gap-1">

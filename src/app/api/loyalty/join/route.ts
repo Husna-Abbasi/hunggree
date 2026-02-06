@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { restaurantId } = body;
+        const { restaurantId, memberName } = body;
 
         if (!restaurantId) {
             return NextResponse.json({ error: 'Restaurant ID required' }, { status: 400 });
@@ -41,13 +41,15 @@ export async function POST(req: Request) {
             .single();
 
         if (!card) {
-            const objectId = `${program.google_class_id}-user-${user.id}`; // Simple unique ID
+            // Use restaurantId (not full classId) to avoid double ISSUER_ID prefix
+            const objectId = `${restaurantId}-user-${user.id}`;
             const { data: newCard, error: createError } = await supabase
                 .from('loyalty_cards')
                 .insert({
                     user_id: user.id,
                     restaurant_id: restaurantId,
                     google_object_id: objectId,
+                    member_name: memberName || null,
                     current_points: 0,
                     total_points_earned: 0
                 })
@@ -56,15 +58,23 @@ export async function POST(req: Request) {
 
             if (createError) throw createError;
             card = newCard;
+        } else if (memberName && !card.member_name) {
+            // Update existing card with member name if not set
+            await supabase
+                .from('loyalty_cards')
+                .update({ member_name: memberName })
+                .eq('id', card.id);
+            card.member_name = memberName;
         }
 
-        // Generate Save Link
+        // Generate Save Link with member name
         const saveLink = GoogleWalletService.generateAddToWalletLink(
             program.google_class_id,
-            card.google_object_id!, // Assumes we just created it or it existed
+            card.google_object_id!,
             user.id,
             card.current_points,
-            restaurant?.name || 'Restaurant'
+            restaurant?.name || 'Restaurant',
+            card.member_name || memberName || 'Member'
         );
 
         return NextResponse.json({ success: true, saveLink });

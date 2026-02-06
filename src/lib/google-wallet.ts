@@ -97,7 +97,7 @@ export class GoogleWalletService {
     }
 
     // Update loyalty pass points in Google Wallet (creates pass if it doesn't exist)
-    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string) {
+    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string, memberName?: string) {
         if (!ISSUER_ID) throw new Error("Missing ISSUER_ID");
 
         const client = await this.getClient();
@@ -108,17 +108,24 @@ export class GoogleWalletService {
         // First try PATCH (update existing)
         try {
             const patchUrl = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${fullObjectId}`;
+            const patchData: any = {
+                loyaltyPoints: {
+                    label: 'Points',
+                    balance: { string: newPoints.toString() }
+                }
+            };
+
+            // Also update member name if provided
+            if (memberName) {
+                patchData.accountName = memberName;
+            }
+
             const res = await client.request({
                 url: patchUrl,
                 method: 'PATCH',
-                data: {
-                    loyaltyPoints: {
-                        label: 'Points',
-                        balance: { string: newPoints.toString() }
-                    }
-                }
+                data: patchData
             });
-            console.log('[GoogleWallet] ✅ Updated pass points:', fullObjectId, '→', newPoints);
+            console.log('[GoogleWallet] ✅ Updated pass points:', fullObjectId, '→', newPoints, memberName ? `(${memberName})` : '');
             return res.data;
         } catch (e: any) {
             // If 404, pass doesn't exist yet - try to create it
@@ -140,7 +147,7 @@ export class GoogleWalletService {
                             label: 'Points',
                             balance: { string: newPoints.toString() }
                         },
-                        accountName: 'Member',
+                        accountName: memberName || 'Member',
                     };
                     const createRes = await client.request({
                         url: createUrl,
@@ -164,7 +171,7 @@ export class GoogleWalletService {
         }
     }
 
-    static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string) {
+    static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string, memberName?: string) {
         if (!PRIVATE_KEY || !CLIENT_EMAIL || !ISSUER_ID) throw new Error("Missing Credentials");
 
         const loyaltyObject = {
@@ -181,7 +188,7 @@ export class GoogleWalletService {
                 label: 'Points',
                 balance: { string: points.toString() }
             },
-            accountName: 'Member',
+            accountName: memberName || 'Member',
         };
 
         const claims = {

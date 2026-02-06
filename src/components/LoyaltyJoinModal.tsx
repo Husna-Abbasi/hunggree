@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner, Image } from "@heroui/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner, Image, Input } from "@heroui/react";
 import { createClient } from "@/lib/supabase-browser";
-import { Gift, Wallet } from "lucide-react";
+import { Gift, Wallet, User } from "lucide-react";
 
 interface LoyaltyJoinModalProps {
     isOpen: boolean;
@@ -17,12 +17,16 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
     const [saveLink, setSaveLink] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [memberName, setMemberName] = useState("");
 
     const supabase = createClient();
 
     useEffect(() => {
         if (isOpen) {
             checkUser();
+            setMemberName(""); // Reset on open
+            setSaveLink(null);
+            setError(null);
         }
     }, [isOpen]);
 
@@ -40,6 +44,11 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
             return;
         }
 
+        if (!memberName.trim()) {
+            setError("Please enter your name");
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -47,7 +56,7 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
             const res = await fetch('/api/loyalty/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ restaurantId })
+                body: JSON.stringify({ restaurantId, memberName: memberName.trim() })
             });
 
             const data = await res.json();
@@ -104,13 +113,27 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
                                 </div>
                             ) : (
                                 <div className="space-y-4">
+                                    {/* Name Input */}
+                                    <Input
+                                        label="Your Name"
+                                        placeholder="Enter your name for the rewards card"
+                                        value={memberName}
+                                        onValueChange={setMemberName}
+                                        startContent={<User size={16} className="text-gray-400" />}
+                                        classNames={{
+                                            inputWrapper: "bg-zinc-800 border-white/10",
+                                            label: "text-gray-400"
+                                        }}
+                                        isRequired
+                                    />
+
                                     <div className="bg-zinc-800/50 p-4 rounded-xl border border-white/5 flex items-center gap-4">
                                         <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary">
                                             <span className="font-bold text-lg">1</span>
                                         </div>
                                         <div>
                                             <p className="font-bold text-white">Join Program</p>
-                                            <p className="text-xs text-gray-400">Click Join to create your digital card.</p>
+                                            <p className="text-xs text-gray-400">Enter your name and click Join.</p>
                                         </div>
                                     </div>
                                     <div className="bg-zinc-800/50 p-4 rounded-xl border border-white/5 flex items-center gap-4">
