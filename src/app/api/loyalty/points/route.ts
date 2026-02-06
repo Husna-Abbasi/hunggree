@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         // Get program for points_per_visit default and classId for wallet
         const { data: program } = await supabase
             .from('loyalty_programs')
-            .select('points_per_visit, reward_threshold, google_class_id')
+            .select('points_per_visit, reward_threshold, google_class_id, pass_fields')
             .eq('restaurant_id', restaurantId)
             .single();
 
@@ -84,7 +84,9 @@ export async function POST(req: Request) {
                     newPoints,
                     program?.google_class_id,
                     updatedCard.user_id,
-                    updatedCard.member_name
+                    updatedCard.member_name,
+                    undefined,
+                    program?.pass_fields
                 );
             } catch (walletError) {
                 console.error('Wallet sync failed:', walletError);

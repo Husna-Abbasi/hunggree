@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-browser";
-import { Button, Input, Card, CardBody, CardHeader, Divider, Image, Spinner, Select, SelectItem, Switch } from "@heroui/react";
-import { Gift, Save, CheckCircle, AlertCircle, Store, Power, Search, Users } from "lucide-react";
+import { Button, Input, Card, CardBody, CardHeader, Divider, Image, Spinner, Select, SelectItem, Switch, Tabs, Tab } from "@heroui/react";
+import { Gift, Save, CheckCircle, AlertCircle, Store, Power, Search, Users, Palette, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PassDesigner from "@/components/PassDesigner";
 
 export default function LoyaltyDashboard() {
     const [loading, setLoading] = useState(true);
@@ -42,8 +43,13 @@ export default function LoyaltyDashboard() {
         reward_threshold: 10,
         reward_description: "",
         logo_url: "",
-        is_active: true
+        wide_logo_url: "",
+        hero_image_url: "",
+        background_color: "#1a1a1a",
+        is_active: true,
+        pass_fields: { name: true, phone: true, points: true }
     });
+    const [activeTab, setActiveTab] = useState("settings");
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const supabase = createClient();
@@ -101,7 +107,8 @@ export default function LoyaltyDashboard() {
                     points_per_visit: 1,
                     reward_threshold: 10,
                     reward_description: "",
-                    logo_url: ""
+                    logo_url: "",
+                    pass_fields: { name: true, phone: true, points: true }
                 });
             }
         };
@@ -123,7 +130,11 @@ export default function LoyaltyDashboard() {
                     pointsPerVisit: Number(program.points_per_visit),
                     rewardThreshold: Number(program.reward_threshold),
                     rewardDescription: program.reward_description,
-                    logoUrl: program.logo_url
+                    logoUrl: program.logo_url,
+                    wideLogoUrl: program.wide_logo_url,
+                    heroImageUrl: program.hero_image_url,
+                    backgroundColor: program.background_color,
+                    passFields: program.pass_fields
                 })
             });
 
@@ -234,10 +245,35 @@ export default function LoyaltyDashboard() {
                 <Card className="md:col-span-2 bg-zinc-900 border border-white/10">
                     <CardHeader className="px-6 py-4 border-b border-white/10">
                         <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2">
-                                <Gift className="text-primary" />
-                                <h3 className="font-bold text-lg text-white">Program Configuration</h3>
-                            </div>
+                            <Tabs
+                                selectedKey={activeTab}
+                                onSelectionChange={(key) => setActiveTab(key as string)}
+                                variant="underlined"
+                                classNames={{
+                                    tabList: "gap-4",
+                                    cursor: "bg-primary",
+                                    tab: "px-0"
+                                }}
+                            >
+                                <Tab
+                                    key="settings"
+                                    title={
+                                        <div className="flex items-center gap-2">
+                                            <Settings size={16} />
+                                            <span>Settings</span>
+                                        </div>
+                                    }
+                                />
+                                <Tab
+                                    key="design"
+                                    title={
+                                        <div className="flex items-center gap-2">
+                                            <Palette size={16} />
+                                            <span>Design Pass</span>
+                                        </div>
+                                    }
+                                />
+                            </Tabs>
                             {/* Toggle Switch (Only show if program exists) */}
                             {program?.google_class_id && (
                                 <div className="flex items-center gap-3">
@@ -255,70 +291,105 @@ export default function LoyaltyDashboard() {
                         </div>
                     </CardHeader>
                     <CardBody className="p-6 space-y-6">
-                        <Input
-                            label="Program Name"
-                            placeholder="e.g. Hunggree Rewards"
-                            value={program.program_name}
-                            onChange={(e) => setProgram({ ...program, program_name: e.target.value })}
-                            variant="bordered"
-                            classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
-                        />
+                        {activeTab === "settings" ? (
+                            <>
+                                <Input
+                                    label="Program Name"
+                                    placeholder="e.g. Hunggree Rewards"
+                                    value={program.program_name}
+                                    onChange={(e) => setProgram({ ...program, program_name: e.target.value })}
+                                    variant="bordered"
+                                    classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input
-                                type="number"
-                                label="Points per Visit"
-                                value={program.points_per_visit.toString()}
-                                onChange={(e) => setProgram({ ...program, points_per_visit: e.target.value })}
-                                variant="bordered"
-                                classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
-                            />
-                            <Input
-                                type="number"
-                                label="Points for Reward"
-                                value={program.reward_threshold.toString()}
-                                onChange={(e) => setProgram({ ...program, reward_threshold: e.target.value })}
-                                variant="bordered"
-                                description={`Customer gets a reward after ${program.reward_threshold} visits`}
-                                classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
-                            />
-                        </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input
+                                        type="number"
+                                        label="Points per Visit"
+                                        value={program.points_per_visit.toString()}
+                                        onChange={(e) => setProgram({ ...program, points_per_visit: e.target.value })}
+                                        variant="bordered"
+                                        classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                    />
+                                    <Input
+                                        type="number"
+                                        label="Points for Reward"
+                                        value={program.reward_threshold.toString()}
+                                        onChange={(e) => setProgram({ ...program, reward_threshold: e.target.value })}
+                                        variant="bordered"
+                                        description={`Customer gets a reward after ${program.reward_threshold} visits`}
+                                        classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                    />
+                                </div>
 
-                        <Input
-                            label="Reward Description"
-                            placeholder="e.g. Free Burger"
-                            value={program.reward_description}
-                            onChange={(e) => setProgram({ ...program, reward_description: e.target.value })}
-                            variant="bordered"
-                            classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
-                        />
+                                <Input
+                                    label="Reward Description"
+                                    placeholder="e.g. Free Burger"
+                                    value={program.reward_description}
+                                    onChange={(e) => setProgram({ ...program, reward_description: e.target.value })}
+                                    variant="bordered"
+                                    classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                />
 
-                        <Input
-                            label="Logo URL (Optional)"
-                            placeholder="https://..."
-                            value={program.logo_url || ''}
-                            onChange={(e) => setProgram({ ...program, logo_url: e.target.value })}
-                            variant="bordered"
-                            classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
-                        />
+                                {message && (
+                                    <div className={`p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                                        {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                                        <span className="text-sm font-medium">{message.text}</span>
+                                    </div>
+                                )}
 
-                        {message && (
-                            <div className={`p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                                {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-                                <span className="text-sm font-medium">{message.text}</span>
-                            </div>
+                                <Button
+                                    color="primary"
+                                    size="lg"
+                                    className="w-full font-bold uppercase tracking-widest"
+                                    onPress={handleSave}
+                                    isLoading={saving}
+                                    startContent={!saving && <Save size={20} />}
+                                >
+                                    {program.google_class_id ? 'Update Program' : 'Activate Loyalty Program'}
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <PassDesigner
+                                    design={{
+                                        logoUrl: program.logo_url || '',
+                                        wideLogoUrl: program.wide_logo_url || '',
+                                        heroImageUrl: program.hero_image_url || '',
+                                        backgroundColor: program.background_color || '#1a1a1a',
+                                        passFields: program.pass_fields || { name: true, phone: true, points: true }
+                                    }}
+                                    onChange={(design) => setProgram({
+                                        ...program,
+                                        logo_url: design.logoUrl,
+                                        wide_logo_url: design.wideLogoUrl,
+                                        hero_image_url: design.heroImageUrl,
+                                        background_color: design.backgroundColor,
+                                        pass_fields: design.passFields
+                                    })}
+                                    programName={program.program_name}
+                                    restaurantName={restaurant?.name || ''}
+                                />
+
+                                {message && (
+                                    <div className={`p-3 rounded-lg flex items-center gap-2 ${message.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                                        {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+                                        <span className="text-sm font-medium">{message.text}</span>
+                                    </div>
+                                )}
+
+                                <Button
+                                    color="primary"
+                                    size="lg"
+                                    className="w-full font-bold uppercase tracking-widest"
+                                    onPress={handleSave}
+                                    isLoading={saving}
+                                    startContent={!saving && <Save size={20} />}
+                                >
+                                    Save Design
+                                </Button>
+                            </>
                         )}
-
-                        <Button
-                            color="primary"
-                            size="lg"
-                            className="w-full font-bold uppercase tracking-widest"
-                            onPress={handleSave}
-                            isLoading={saving}
-                            startContent={!saving && <Save size={20} />}
-                        >
-                            {program.google_class_id ? 'Update Program' : 'Activate Loyalty Program'}
-                        </Button>
                     </CardBody>
                 </Card>
 

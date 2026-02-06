@@ -52,6 +52,14 @@ if (!ISSUER_ID || !CLIENT_EMAIL || !PRIVATE_KEY) {
     console.warn("Missing Google Wallet credentials. Loyalty features will not work.");
 }
 
+// Design options for pass customization
+export interface PassDesignOptions {
+    logoUrl?: string;
+    wideLogoUrl?: string;
+    heroImageUrl?: string;
+    backgroundColor?: string; // Hex color e.g. '#4CAF50'
+}
+
 export class GoogleWalletService {
     private static scopes = ['https://www.googleapis.com/auth/wallet_object.issuer'];
 
@@ -67,21 +75,43 @@ export class GoogleWalletService {
         return client;
     }
 
-    static async createLoyaltyClass(programId: string, programName: string, issuerName: string, logoUrl?: string) {
+    static async createLoyaltyClass(
+        programId: string,
+        programName: string,
+        issuerName: string,
+        design?: PassDesignOptions
+    ) {
         const client = await this.getClient();
         const url = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass`;
 
         const classId = `${ISSUER_ID}.${programId}`;
 
-        const loyaltyClass = {
+        const loyaltyClass: any = {
             id: classId,
             issuerName: issuerName,
             programName: programName,
-            programLogo: logoUrl ? {
-                sourceUri: { uri: logoUrl }
-            } : undefined,
             reviewStatus: 'UNDER_REVIEW',
         };
+
+        // Apply design options
+        if (design?.logoUrl) {
+            loyaltyClass.programLogo = {
+                sourceUri: { uri: design.logoUrl }
+            };
+        }
+        if (design?.wideLogoUrl) {
+            loyaltyClass.wideProgramLogo = {
+                sourceUri: { uri: design.wideLogoUrl }
+            };
+        }
+        if (design?.heroImageUrl) {
+            loyaltyClass.heroImage = {
+                sourceUri: { uri: design.heroImageUrl }
+            };
+        }
+        if (design?.backgroundColor) {
+            loyaltyClass.hexBackgroundColor = design.backgroundColor;
+        }
 
         try {
             const res = await client.request({
@@ -91,41 +121,153 @@ export class GoogleWalletService {
             });
             return classId;
         } catch (e: any) {
-            if (e.response?.status === 409) return classId;
+            if (e.response?.status === 409) {
+                // Class exists, update it instead
+                await this.updateLoyaltyClass(classId, programName, issuerName, design);
+                return classId;
+            }
             throw e;
         }
     }
 
-    // Update loyalty pass points in Google Wallet (creates pass if it doesn't exist)
-    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string, memberName?: string) {
+    // Update existing loyalty class design
+    static async updateLoyaltyClass(
+        classId: string,
+        programName?: string,
+        issuerName?: string,
+        design?: PassDesignOptions
+    ) {
+        const client = await this.getClient();
+        const fullClassId = classId.includes('.') ? classId : `${ISSUER_ID}.${classId}`;
+        const url = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyClass/${fullClassId}`;
+
+        try {
+            // First GET the existing class to preserve required fields
+            const getRes = await client.request({ url, method: 'GET' });
+            const existingClass = getRes.data as any;
+
+            // Set valid reviewStatus - can't use APPROVED for updates
+            existingClass.reviewStatus = 'UNDER_REVIEW';
+
+            // Merge updates into existing class
+            if (programName) existingClass.programName = programName;
+            if (issuerName) existingClass.issuerName = issuerName;
+
+            if (design?.logoUrl) {
+                existingClass.programLogo = { sourceUri: { uri: design.logoUrl } };
+            }
+            if (design?.wideLogoUrl) {
+                existingClass.wideProgramLogo = { sourceUri: { uri: design.wideLogoUrl } };
+            }
+            if (design?.heroImageUrl) {
+                existingClass.heroImage = { sourceUri: { uri: design.heroImageUrl } };
+            }
+            if (design?.backgroundColor) {
+                existingClass.hexBackgroundColor = design.backgroundColor;
+            }
+
+            // Use PUT to update the entire class
+            const res = await client.request({
+                url,
+                method: 'PUT',
+                data: existingClass
+            });
+            console.log('[GoogleWallet] ✅ Updated loyalty class design:', fullClassId);
+            return res.data;
+        } catch (e: any) {
+            console.error('[GoogleWallet] ❌ Failed to update class:', e.response?.data?.error || e.message);
+            throw e;
+        }
+    }
+
+    // Archive/delete loyalty pass in Google Wallet (sets state to EXPIRED)
+    static async archiveLoyaltyObject(objectId: string) {
         if (!ISSUER_ID) throw new Error("Missing ISSUER_ID");
 
         const client = await this.getClient();
         const fullObjectId = objectId.includes('.') ? objectId : `${ISSUER_ID}.${objectId}`;
 
-        console.log('[GoogleWallet] Updating pass:', { objectId, fullObjectId, newPoints });
+        console.log('[GoogleWallet] Archiving pass:', fullObjectId);
+
+        try {
+            const patchUrl = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${fullObjectId}`;
+            const res = await client.request({
+                url: patchUrl,
+                method: 'PATCH',
+                data: {
+                    state: 'EXPIRED'
+                }
+            });
+            console.log('[GoogleWallet] ✅ Archived pass:', fullObjectId);
+            return res.data;
+        } catch (e: any) {
+            // If 404, pass doesn't exist - that's fine, consider it deleted
+            if (e.response?.status === 404) {
+                console.log('[GoogleWallet] Pass not found (already deleted):', fullObjectId);
+                return null;
+            }
+            console.error('[GoogleWallet] ❌ Failed to archive pass:', e.response?.data?.error || e.message);
+            throw e;
+        }
+    }
+
+    // Update loyalty pass points in Google Wallet (creates pass if it doesn't exist)
+    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string, memberName?: string, phoneNumber?: string, fields?: { name: boolean; phone: boolean; points: boolean }) {
+        if (!ISSUER_ID) throw new Error("Missing ISSUER_ID");
+
+        const client = await this.getClient();
+        const fullObjectId = objectId.includes('.') ? objectId : `${ISSUER_ID}.${objectId}`;
+
+        console.log('[GoogleWallet] Updating pass:', { objectId, fullObjectId, newPoints, memberName, phoneNumber });
 
         // First try PATCH (update existing)
         try {
             const patchUrl = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${fullObjectId}`;
-            const patchData: any = {
-                loyaltyPoints: {
+            const patchData: any = {};
+
+            // Only update points if enabled
+            if (fields?.points !== false) {
+                patchData.loyaltyPoints = {
                     label: 'Points',
                     balance: { string: newPoints.toString() }
-                }
-            };
+                };
+            }
 
-            // Also update member name if provided
-            if (memberName) {
+            // Update all pass details
+            // Update accountName only if name field is enabled (or undefined/default true)
+            if (fields?.name !== false && memberName) {
                 patchData.accountName = memberName;
             }
+
+            // Update accountId to unique objectId
+            patchData.accountId = objectId;
+
+            // Update barcode with unique ID
+            patchData.barcode = {
+                type: 'QR_CODE',
+                value: objectId,
+                alternateText: objectId,
+            };
+
+            // Update text modules with name and phone
+            const textModules = [];
+
+            // NOTE: "Name" text module removed to avoid duplication with accountName
+
+            if (fields?.phone !== false && phoneNumber) {
+                textModules.push({
+                    header: 'Phone',
+                    body: phoneNumber
+                });
+            }
+            patchData.textModulesData = textModules;
 
             const res = await client.request({
                 url: patchUrl,
                 method: 'PATCH',
                 data: patchData
             });
-            console.log('[GoogleWallet] ✅ Updated pass points:', fullObjectId, '→', newPoints, memberName ? `(${memberName})` : '');
+            console.log('[GoogleWallet] ✅ Updated pass:', fullObjectId, '→', newPoints, memberName ? `(${memberName})` : '');
             return res.data;
         } catch (e: any) {
             // If 404, pass doesn't exist yet - try to create it
@@ -138,16 +280,21 @@ export class GoogleWalletService {
                         classId: classId,
                         state: 'ACTIVE',
                         accountId: userId,
+                        // Only set accountName if name field is enabled
+                        ...(fields?.name !== false ? { accountName: memberName || 'Member' } : {}),
                         barcode: {
                             type: 'QR_CODE',
                             value: userId,
                             alternateText: userId,
                         },
-                        loyaltyPoints: {
+                        loyaltyPoints: fields?.points !== false ? {
                             label: 'Points',
                             balance: { string: newPoints.toString() }
-                        },
-                        accountName: memberName || 'Member',
+                        } : undefined,
+                        textModulesData: [
+                            // Name removed from text modules to avoid duplication
+                            ...(fields?.phone !== false && phoneNumber ? [{ header: 'Phone', body: phoneNumber }] : [])
+                        ]
                     };
                     const createRes = await client.request({
                         url: createUrl,
@@ -171,24 +318,32 @@ export class GoogleWalletService {
         }
     }
 
-    static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string, memberName?: string) {
+    static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string, memberName?: string, phoneNumber?: string, fields?: { name: boolean; phone: boolean; points: boolean }) {
         if (!PRIVATE_KEY || !CLIENT_EMAIL || !ISSUER_ID) throw new Error("Missing Credentials");
 
-        const loyaltyObject = {
+        const loyaltyObject: any = {
             id: `${ISSUER_ID}.${objectId}`,
             classId: classId,
             state: 'ACTIVE',
-            accountId: userId,
+            accountId: objectId,
+            // Only set accountName if name field is enabled
+            ...(fields?.name !== false ? { accountName: memberName || 'Member' } : {}),
             barcode: {
                 type: 'QR_CODE',
-                value: userId,
-                alternateText: userId,
+                value: objectId,
+                alternateText: objectId,
             },
-            loyaltyPoints: {
+            loyaltyPoints: fields?.points !== false ? {
                 label: 'Points',
                 balance: { string: points.toString() }
-            },
-            accountName: memberName || 'Member',
+            } : undefined,
+            textModulesData: [
+                // Name removed from text modules to avoid duplication
+                ...(fields?.phone !== false && phoneNumber ? [{
+                    header: 'Phone',
+                    body: phoneNumber
+                }] : [])
+            ],
         };
 
         const claims = {

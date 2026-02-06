@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner, Image, Input } from "@heroui/react";
 import { createClient } from "@/lib/supabase-browser";
-import { Gift, Wallet, User } from "lucide-react";
+import { Gift, Wallet, UserRound, Phone } from "lucide-react";
 
 interface LoyaltyJoinModalProps {
     isOpen: boolean;
@@ -18,6 +18,7 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
     const [error, setError] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [memberName, setMemberName] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
 
     const supabase = createClient();
 
@@ -25,6 +26,7 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
         if (isOpen) {
             checkUser();
             setMemberName(""); // Reset on open
+            setPhoneNumber("");
             setSaveLink(null);
             setError(null);
         }
@@ -36,16 +38,13 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
     };
 
     const handleJoin = async () => {
-        if (!user) {
-            // Redirect to login or show login prompt
-            // For now, we assume user must be logged in. 
-            // In a real flow, we might capture phone here and do shadow login.
-            window.location.href = `/auth/login?redirect=/menu/${window.location.pathname.split('/').pop()}`;
+        if (!memberName.trim()) {
+            setError("Please enter your name");
             return;
         }
 
-        if (!memberName.trim()) {
-            setError("Please enter your name");
+        if (!phoneNumber.trim() || phoneNumber.length < 10) {
+            setError("Please enter a valid phone number");
             return;
         }
 
@@ -56,7 +55,11 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
             const res = await fetch('/api/loyalty/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ restaurantId, memberName: memberName.trim() })
+                body: JSON.stringify({
+                    restaurantId,
+                    memberName: memberName.trim(),
+                    phoneNumber: phoneNumber.trim()
+                })
             });
 
             const data = await res.json();
@@ -113,36 +116,58 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {/* Name Input */}
-                                    <Input
-                                        label="Your Name"
-                                        placeholder="Enter your name for the rewards card"
-                                        value={memberName}
-                                        onValueChange={setMemberName}
-                                        startContent={<User size={16} className="text-gray-400" />}
-                                        classNames={{
-                                            inputWrapper: "bg-zinc-800 border-white/10",
-                                            label: "text-gray-400"
-                                        }}
-                                        isRequired
-                                    />
-
-                                    <div className="bg-zinc-800/50 p-4 rounded-xl border border-white/5 flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary">
-                                            <span className="font-bold text-lg">1</span>
+                                    {/* Step 1: Enter Details */}
+                                    <div className="bg-zinc-800/50 p-4 rounded-xl border border-white/5">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary shrink-0">
+                                                <span className="font-bold">1</span>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-white">Enter Your Details</p>
+                                                <p className="text-xs text-gray-400">We'll use this for your rewards card</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-white">Join Program</p>
-                                            <p className="text-xs text-gray-400">Enter your name and click Join.</p>
+                                        <div className="space-y-3 pl-[52px]">
+                                            <Input
+                                                label="Your Name"
+                                                placeholder="Enter your name"
+                                                value={memberName}
+                                                onValueChange={setMemberName}
+                                                startContent={<UserRound size={16} className="text-gray-400" />}
+                                                classNames={{
+                                                    inputWrapper: "bg-zinc-700 border-white/10",
+                                                    label: "text-gray-400"
+                                                }}
+                                                isRequired
+                                                size="sm"
+                                            />
+                                            <Input
+                                                label="Phone Number"
+                                                placeholder="Enter your phone number"
+                                                value={phoneNumber}
+                                                onValueChange={setPhoneNumber}
+                                                startContent={<Phone size={16} className="text-gray-400" />}
+                                                classNames={{
+                                                    inputWrapper: "bg-zinc-700 border-white/10",
+                                                    label: "text-gray-400"
+                                                }}
+                                                type="tel"
+                                                isRequired
+                                                size="sm"
+                                            />
                                         </div>
                                     </div>
-                                    <div className="bg-zinc-800/50 p-4 rounded-xl border border-white/5 flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary">
-                                            <span className="font-bold text-lg">2</span>
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-white">Add to Wallet</p>
-                                            <p className="text-xs text-gray-400">Save it to Google Wallet for easy access.</p>
+
+                                    {/* Step 2: Add to Wallet */}
+                                    <div className="bg-zinc-800/30 p-4 rounded-xl border border-white/5 opacity-60">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary/60 shrink-0">
+                                                <span className="font-bold">2</span>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-white/60">Add to Google Wallet</p>
+                                                <p className="text-xs text-gray-500">Save your card for easy access</p>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -165,7 +190,7 @@ export default function LoyaltyJoinModal({ isOpen, onClose, restaurantId, restau
                                     isLoading={loading}
                                     className="font-bold"
                                 >
-                                    {user ? 'Process My Card' : 'Log in to Join'}
+                                    {user ? 'Process My Card' : 'Get My Rewards Card'}
                                 </Button>
                             )}
                         </ModalFooter>

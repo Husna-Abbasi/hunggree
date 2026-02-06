@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Progress, cn } from "@heroui/react";
-import { Plus, Gift, User, Phone, Clock } from "lucide-react";
+import { Plus, Gift, User, Phone, Clock, Trash2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 interface LoyaltyCustomerCardProps {
@@ -35,6 +35,8 @@ export default function LoyaltyCustomerCard({
 }: LoyaltyCustomerCardProps) {
     const [isAddingPoints, setIsAddingPoints] = useState(false);
     const [isRedeeming, setIsRedeeming] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const threshold = program?.reward_threshold || 10;
     const pointsPerVisit = program?.points_per_visit || 1;
@@ -85,6 +87,52 @@ export default function LoyaltyCustomerCard({
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const handleDelete = async () => {
+        const name = customer.member_name || customer.profiles?.full_name || 'this customer';
+        if (!confirm(`Delete ${name}'s loyalty card?\n\nThis will:\n• Archive the pass in their Google Wallet\n• Remove them from your customers list\n\nThis cannot be undone.`)) {
+            return;
+        }
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/loyalty/delete?cardId=${customer.id}&restaurantId=${restaurantId}`, {
+                method: 'DELETE'
+            });
+            if (!res.ok) throw new Error('Failed to delete');
+            onPointsUpdated();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to delete card');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        if (!confirm("Update this customer's Google Wallet pass?\n\nThis will push the latest design, name, and phone number to their wallet pass.")) {
+            return;
+        }
+        setIsRefreshing(true);
+        try {
+            const res = await fetch('/api/loyalty/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    restaurantId,
+                    cardId: customer.id
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to update pass');
+            alert('Pass updated successfully!');
+            onPointsUpdated();
+        } catch (error: any) {
+            console.error(error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            setIsRefreshing(false);
+        }
     };
 
     return (
@@ -148,7 +196,6 @@ export default function LoyaltyCustomerCard({
                 <span>Last activity: {formatDate(customer.updated_at)}</span>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-2">
                 <Button
                     size="sm"
@@ -174,6 +221,26 @@ export default function LoyaltyCustomerCard({
                     isDisabled={!rewardReady}
                 >
                     Redeem
+                </Button>
+                <Button
+                    size="sm"
+                    isIconOnly
+                    variant="flat"
+                    className="bg-zinc-800 text-blue-400 hover:bg-blue-500/20"
+                    onPress={handleRefresh}
+                    isLoading={isRefreshing}
+                >
+                    <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+                </Button>
+                <Button
+                    size="sm"
+                    isIconOnly
+                    variant="flat"
+                    className="bg-zinc-800 text-red-400 hover:bg-red-500/20"
+                    onPress={handleDelete}
+                    isLoading={isDeleting}
+                >
+                    <Trash2 size={14} />
                 </Button>
             </div>
         </div>

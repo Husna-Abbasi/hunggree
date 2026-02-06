@@ -12,13 +12,27 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { restaurantId, programName, pointsPerVisit, rewardThreshold, rewardDescription, logoUrl } = body;
+        const {
+            restaurantId,
+            programName,
+            pointsPerVisit,
+            rewardThreshold,
+            rewardDescription,
+            logoUrl,
+            wideLogoUrl,
+            heroImageUrl,
+            backgroundColor,
+            passFields
+        } = body;
 
         if (!restaurantId || !programName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // Verify ownership
+        // Verify ownership (or admin check)
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+        const isAdmin = profile?.role === 'admin';
+
         const { data: restaurant, error: restError } = await supabase
             .from('restaurants')
             .select('owner_id, name')
@@ -29,16 +43,21 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 });
         }
 
-        if (restaurant.owner_id !== user.id) {
+        if (!isAdmin && restaurant.owner_id !== user.id) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Create Google Wallet Class
+        // Create/Update Google Wallet Class with design options
         const classId = await GoogleWalletService.createLoyaltyClass(
             restaurantId,
             programName,
             restaurant.name,
-            logoUrl
+            {
+                logoUrl,
+                wideLogoUrl,
+                heroImageUrl,
+                backgroundColor
+            }
         );
 
         // Save to DB
@@ -52,6 +71,10 @@ export async function POST(req: Request) {
                 reward_description: rewardDescription || 'Free Item',
                 google_class_id: classId,
                 logo_url: logoUrl,
+                wide_logo_url: wideLogoUrl,
+                hero_image_url: heroImageUrl,
+                background_color: backgroundColor || '#1a1a1a',
+                pass_fields: passFields,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'restaurant_id' });
 

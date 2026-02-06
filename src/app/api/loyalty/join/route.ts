@@ -6,16 +6,16 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
         const body = await req.json();
-        const { restaurantId, memberName } = body;
+        const { restaurantId, memberName, phoneNumber } = body;
 
         if (!restaurantId) {
             return NextResponse.json({ error: 'Restaurant ID required' }, { status: 400 });
+        }
+
+        if (!phoneNumber) {
+            return NextResponse.json({ error: 'Phone number required' }, { status: 400 });
         }
 
         // Get Program Details
@@ -32,24 +32,25 @@ export async function POST(req: Request) {
         // Get Restaurant Name
         const { data: restaurant } = await supabase.from('restaurants').select('name').eq('id', restaurantId).single();
 
-        // Get or Create Loyalty Card
+        // Get or Create Loyalty Card (by phone number)
         let { data: card, error: cardError } = await supabase
             .from('loyalty_cards')
             .select('*')
-            .eq('user_id', user.id)
             .eq('restaurant_id', restaurantId)
+            .eq('phone_number', phoneNumber)
             .single();
 
         if (!card) {
-            // Use restaurantId (not full classId) to avoid double ISSUER_ID prefix
-            const objectId = `${restaurantId}-user-${user.id}`;
+            // Use phone-based objectId for consistency
+            const objectId = `${restaurantId}-${phoneNumber.replace(/\D/g, '')}`;
             const { data: newCard, error: createError } = await supabase
                 .from('loyalty_cards')
                 .insert({
-                    user_id: user.id,
+                    user_id: user?.id || null,
                     restaurant_id: restaurantId,
                     google_object_id: objectId,
                     member_name: memberName || null,
+                    phone_number: phoneNumber,
                     current_points: 0,
                     total_points_earned: 0
                 })
@@ -62,19 +63,24 @@ export async function POST(req: Request) {
             // Update existing card with member name if not set
             await supabase
                 .from('loyalty_cards')
-                .update({ member_name: memberName })
+                .update({
+                    member_name: memberName,
+                    user_id: user?.id || card.user_id
+                })
                 .eq('id', card.id);
             card.member_name = memberName;
         }
 
-        // Generate Save Link with member name
+        // Generate Save Link with member name and phone
         const saveLink = GoogleWalletService.generateAddToWalletLink(
             program.google_class_id,
             card.google_object_id!,
-            user.id,
+            user?.id || `guest-${phoneNumber.replace(/\D/g, '')}`,
             card.current_points,
             restaurant?.name || 'Restaurant',
-            card.member_name || memberName || 'Member'
+            card.member_name || memberName || 'Member',
+            phoneNumber,
+            program.pass_fields
         );
 
         return NextResponse.json({ success: true, saveLink });

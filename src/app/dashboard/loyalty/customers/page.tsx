@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { Button, Input, Spinner } from "@heroui/react";
-import { Users, Search, Store, RefreshCw, ArrowLeft } from "lucide-react";
+import { Users, Search, Store, RefreshCw, ArrowLeft, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LoyaltyCustomerCard from "@/components/LoyaltyCustomerCard";
@@ -11,6 +11,7 @@ import LoyaltyCustomerCard from "@/components/LoyaltyCustomerCard";
 export default function LoyaltyCustomersPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [refreshingPasses, setRefreshingPasses] = useState(false);
 
     // Multi-restaurant support
     const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -109,6 +110,32 @@ export default function LoyaltyCustomersPage() {
         return () => clearTimeout(timer);
     }, [customerSearch]);
 
+    const handleRefreshPasses = async () => {
+        if (!confirm("Update all Google Wallet passes?\n\nThis will push the latest design, member names, and phone numbers to all existing passes in users' wallets.\n\nThis may take a while depending on the number of members.")) {
+            return;
+        }
+
+        setRefreshingPasses(true);
+        try {
+            const res = await fetch('/api/loyalty/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ restaurantId: selectedRestaurantId })
+            });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Failed to refresh passes');
+
+            alert(`Passes updated!\n\nSUCCESS: ${data.updated}\nFAILED: ${data.failed}`);
+            fetchCustomers();
+        } catch (error: any) {
+            console.error(error);
+            alert(`Error: ${error.message}`);
+        } finally {
+            setRefreshingPasses(false);
+        }
+    };
+
     const filteredRestaurants = restaurants.filter(r =>
         r.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -187,6 +214,16 @@ export default function LoyaltyCustomersPage() {
                     isDisabled={refreshing}
                 >
                     Refresh
+                </Button>
+                <Button
+                    variant="flat"
+                    className="bg-zinc-800 text-white"
+                    startContent={<Wallet size={16} />}
+                    onPress={handleRefreshPasses}
+                    isLoading={refreshingPasses}
+                    isDisabled={refreshing || refreshingPasses}
+                >
+                    Update Wallets
                 </Button>
             </div>
 
