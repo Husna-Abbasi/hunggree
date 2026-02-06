@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { Button, Input, Card, CardBody, CardHeader, Divider, Image, Spinner, Select, SelectItem, Switch } from "@heroui/react";
-import { Gift, Save, CheckCircle, AlertCircle, Store, Power, Search } from "lucide-react";
+import { Gift, Save, CheckCircle, AlertCircle, Store, Power, Search, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoyaltyDashboard() {
     const [loading, setLoading] = useState(true);
@@ -184,6 +185,18 @@ export default function LoyaltyDashboard() {
                     <p className="text-gray-400">
                         Create a digital loyalty card for your customers.
                     </p>
+                    {program?.google_class_id && (
+                        <Link href="/dashboard/loyalty/customers">
+                            <Button
+                                size="sm"
+                                variant="flat"
+                                className="mt-2 bg-primary/10 text-primary font-bold"
+                                startContent={<Users size={14} />}
+                            >
+                                Manage Customers
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Restaurant Selector (Only show if > 1) */}

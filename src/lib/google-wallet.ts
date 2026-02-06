@@ -96,6 +96,74 @@ export class GoogleWalletService {
         }
     }
 
+    // Update loyalty pass points in Google Wallet (creates pass if it doesn't exist)
+    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string) {
+        if (!ISSUER_ID) throw new Error("Missing ISSUER_ID");
+
+        const client = await this.getClient();
+        const fullObjectId = objectId.includes('.') ? objectId : `${ISSUER_ID}.${objectId}`;
+
+        console.log('[GoogleWallet] Updating pass:', { objectId, fullObjectId, newPoints });
+
+        // First try PATCH (update existing)
+        try {
+            const patchUrl = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject/${fullObjectId}`;
+            const res = await client.request({
+                url: patchUrl,
+                method: 'PATCH',
+                data: {
+                    loyaltyPoints: {
+                        label: 'Points',
+                        balance: { string: newPoints.toString() }
+                    }
+                }
+            });
+            console.log('[GoogleWallet] ✅ Updated pass points:', fullObjectId, '→', newPoints);
+            return res.data;
+        } catch (e: any) {
+            // If 404, pass doesn't exist yet - try to create it
+            if (e.response?.status === 404 && classId && userId) {
+                console.log('[GoogleWallet] Pass not found, creating new pass...');
+                try {
+                    const createUrl = `https://walletobjects.googleapis.com/walletobjects/v1/loyaltyObject`;
+                    const loyaltyObject = {
+                        id: fullObjectId,
+                        classId: classId,
+                        state: 'ACTIVE',
+                        accountId: userId,
+                        barcode: {
+                            type: 'QR_CODE',
+                            value: userId,
+                            alternateText: userId,
+                        },
+                        loyaltyPoints: {
+                            label: 'Points',
+                            balance: { string: newPoints.toString() }
+                        },
+                        accountName: 'Member',
+                    };
+                    const createRes = await client.request({
+                        url: createUrl,
+                        method: 'POST',
+                        data: loyaltyObject
+                    });
+                    console.log('[GoogleWallet] ✅ Created new pass with points:', fullObjectId, '→', newPoints);
+                    return createRes.data;
+                } catch (createError: any) {
+                    console.error('[GoogleWallet] ❌ Failed to create pass:', createError.response?.data?.error || createError.message);
+                    return null;
+                }
+            }
+
+            console.error('[GoogleWallet] ❌ Failed to update pass:', {
+                status: e.response?.status,
+                error: e.response?.data?.error || e.message,
+                objectId: fullObjectId
+            });
+            return null;
+        }
+    }
+
     static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string) {
         if (!PRIVATE_KEY || !CLIENT_EMAIL || !ISSUER_ID) throw new Error("Missing Credentials");
 
