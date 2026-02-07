@@ -293,10 +293,10 @@ export default function AdminPage() {
                                         <p className="text-lg font-bold text-white">{generatedCredentials?.restaurantName}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Login Phone</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-1">Login ID</p>
                                         <div className="flex items-center justify-between">
-                                            <p className="text-lg font-mono text-primary">{generatedCredentials?.phone}</p>
-                                            <Button size="sm" variant="flat" onPress={() => navigator.clipboard.writeText(generatedCredentials?.phone)}>Copy</Button>
+                                            <p className="text-lg font-mono text-primary">{generatedCredentials?.loginIdentifier || generatedCredentials?.phone}</p>
+                                            <Button size="sm" variant="flat" onPress={() => navigator.clipboard.writeText(generatedCredentials?.loginIdentifier || generatedCredentials?.phone)}>Copy</Button>
                                         </div>
                                     </div>
                                     <div>
@@ -319,7 +319,8 @@ export default function AdminPage() {
                                     className="w-full text-black font-bold h-12 rounded-xl"
                                     startContent={<Phone size={18} />}
                                     onPress={() => {
-                                        const message = `Hello ${generatedCredentials?.restaurantName},\n\nYour Partner account has been approved!\n\nLogin here: ${window.location.origin}/auth/login\n\nCredentials:\nPhone: ${generatedCredentials?.phone}\nPassword: ${generatedCredentials?.password}\n\nWelcome to Hunggree!`;
+                                        const loginId = generatedCredentials?.loginIdentifier || generatedCredentials?.phone;
+                                        const message = `Hello ${generatedCredentials?.restaurantName},\n\nYour Partner account has been approved and password reset!\n\nLogin here: ${window.location.origin}/auth/login\n\nCredentials:\nLogin ID: ${loginId}\nPassword: ${generatedCredentials?.password}\n\nWelcome to Hunggree!`;
                                         const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
                                         window.open(url, '_blank');
                                     }}

@@ -41,8 +41,8 @@ export async function POST(req: Request) {
             .single();
 
         if (!card) {
-            // Use phone-based objectId for consistency
-            const objectId = `${restaurantId}-${phoneNumber.replace(/\D/g, '')}`;
+            // Use random UUID for objectId to ensure privacy (no phone number in ID)
+            const objectId = crypto.randomUUID();
             const { data: newCard, error: createError } = await supabase
                 .from('loyalty_cards')
                 .insert({
@@ -59,6 +59,10 @@ export async function POST(req: Request) {
 
             if (createError) throw createError;
             card = newCard;
+
+            // If we just created the card, we might want to ensure the pass is created with the correct barcode immediately
+            // But the generate link below will handle the initial creation payload via JWT claim.
+            // The `card.id` is now available to be used as barcode.
         } else if (memberName && !card.member_name) {
             // Update existing card with member name if not set
             await supabase
@@ -80,7 +84,8 @@ export async function POST(req: Request) {
             restaurant?.name || 'Restaurant',
             card.member_name || memberName || 'Member',
             phoneNumber,
-            program.pass_fields
+            program.pass_fields,
+            card.id // Use UUID as barcode value
         );
 
         return NextResponse.json({ success: true, saveLink });

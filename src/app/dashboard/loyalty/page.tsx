@@ -196,18 +196,7 @@ export default function LoyaltyDashboard() {
                     <p className="text-gray-400">
                         Create a digital loyalty card for your customers.
                     </p>
-                    {program?.google_class_id && (
-                        <Link href="/dashboard/loyalty/customers">
-                            <Button
-                                size="sm"
-                                variant="flat"
-                                className="mt-2 bg-primary/10 text-primary font-bold"
-                                startContent={<Users size={14} />}
-                            >
-                                Manage Customers
-                            </Button>
-                        </Link>
-                    )}
+
                 </div>
 
                 {/* Restaurant Selector (Only show if > 1) */}
@@ -250,9 +239,10 @@ export default function LoyaltyDashboard() {
                                 onSelectionChange={(key) => setActiveTab(key as string)}
                                 variant="underlined"
                                 classNames={{
-                                    tabList: "gap-4",
-                                    cursor: "bg-primary",
-                                    tab: "px-0"
+                                    tabList: "gap-6",
+                                    cursor: "w-full bg-primary",
+                                    tab: "max-w-fit px-0 h-10",
+                                    tabContent: "group-data-[selected=true]:text-white group-data-[selected=false]:text-gray-500 font-black uppercase tracking-widest text-xs"
                                 }}
                             >
                                 <Tab
@@ -299,7 +289,7 @@ export default function LoyaltyDashboard() {
                                     value={program.program_name}
                                     onChange={(e) => setProgram({ ...program, program_name: e.target.value })}
                                     variant="bordered"
-                                    classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                    classNames={{ inputWrapper: "bg-black/50 border-white/10", input: "text-white" }}
                                 />
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -309,7 +299,7 @@ export default function LoyaltyDashboard() {
                                         value={program.points_per_visit.toString()}
                                         onChange={(e) => setProgram({ ...program, points_per_visit: e.target.value })}
                                         variant="bordered"
-                                        classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                        classNames={{ inputWrapper: "bg-black/50 border-white/10", input: "text-white" }}
                                     />
                                     <Input
                                         type="number"
@@ -318,7 +308,7 @@ export default function LoyaltyDashboard() {
                                         onChange={(e) => setProgram({ ...program, reward_threshold: e.target.value })}
                                         variant="bordered"
                                         description={`Customer gets a reward after ${program.reward_threshold} visits`}
-                                        classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                        classNames={{ inputWrapper: "bg-black/50 border-white/10", input: "text-white" }}
                                     />
                                 </div>
 
@@ -328,7 +318,7 @@ export default function LoyaltyDashboard() {
                                     value={program.reward_description}
                                     onChange={(e) => setProgram({ ...program, reward_description: e.target.value })}
                                     variant="bordered"
-                                    classNames={{ inputWrapper: "bg-black/50 border-white/10" }}
+                                    classNames={{ inputWrapper: "bg-black/50 border-white/10", input: "text-white" }}
                                 />
 
                                 {message && (

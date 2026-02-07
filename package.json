@@ -12,6 +12,7 @@
     "@google/generative-ai": "^0.24.1",
     "@heroui/react": "^2.8.8",
     "@supabase/ssr": "^0.8.0",
+    "@yudiel/react-qr-scanner": "^2.5.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.31.0",
     "google-auth-library": "^10.5.0",

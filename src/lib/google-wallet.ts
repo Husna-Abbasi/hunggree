@@ -212,7 +212,7 @@ export class GoogleWalletService {
     }
 
     // Update loyalty pass points in Google Wallet (creates pass if it doesn't exist)
-    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string, memberName?: string, phoneNumber?: string, fields?: { name: boolean; phone: boolean; points: boolean }) {
+    static async updateLoyaltyObject(objectId: string, newPoints: number, classId?: string, userId?: string, memberName?: string, phoneNumber?: string, fields?: { name: boolean; phone: boolean; points: boolean }, barcodeValue?: string) {
         if (!ISSUER_ID) throw new Error("Missing ISSUER_ID");
 
         const client = await this.getClient();
@@ -245,8 +245,8 @@ export class GoogleWalletService {
             // Update barcode with unique ID
             patchData.barcode = {
                 type: 'QR_CODE',
-                value: objectId,
-                alternateText: objectId,
+                value: barcodeValue || objectId,
+                alternateText: barcodeValue || objectId,
             };
 
             // Update text modules with name and phone
@@ -284,8 +284,8 @@ export class GoogleWalletService {
                         ...(fields?.name !== false ? { accountName: memberName || 'Member' } : {}),
                         barcode: {
                             type: 'QR_CODE',
-                            value: userId,
-                            alternateText: userId,
+                            value: barcodeValue || userId,
+                            alternateText: barcodeValue || userId,
                         },
                         loyaltyPoints: fields?.points !== false ? {
                             label: 'Points',
@@ -318,7 +318,7 @@ export class GoogleWalletService {
         }
     }
 
-    static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string, memberName?: string, phoneNumber?: string, fields?: { name: boolean; phone: boolean; points: boolean }) {
+    static generateAddToWalletLink(classId: string, objectId: string, userId: string, points: number, restaurantName: string, memberName?: string, phoneNumber?: string, fields?: { name: boolean; phone: boolean; points: boolean }, barcodeValue?: string) {
         if (!PRIVATE_KEY || !CLIENT_EMAIL || !ISSUER_ID) throw new Error("Missing Credentials");
 
         const loyaltyObject: any = {
@@ -330,8 +330,8 @@ export class GoogleWalletService {
             ...(fields?.name !== false ? { accountName: memberName || 'Member' } : {}),
             barcode: {
                 type: 'QR_CODE',
-                value: objectId,
-                alternateText: objectId,
+                value: barcodeValue || objectId,
+                alternateText: barcodeValue || objectId,
             },
             loyaltyPoints: fields?.points !== false ? {
                 label: 'Points',

@@ -221,7 +221,7 @@ export default function PassDesigner({ design, onChange, programName, restaurant
                                     onChange={handleFileSelect('logo')}
                                     className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                                 />
-                                <Button variant="flat" className="w-full pointer-events-none" startContent={<Upload size={16} />}>
+                                <Button color="primary" variant="flat" className="w-full pointer-events-none font-bold text-primary-foreground" startContent={<Upload size={16} />}>
                                     {design.logoUrl ? 'Change Logo' : 'Upload Logo'}
                                 </Button>
                             </div>
@@ -245,7 +245,7 @@ export default function PassDesigner({ design, onChange, programName, restaurant
                                     onChange={handleFileSelect('wideLogo')}
                                     className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                                 />
-                                <Button variant="flat" className="w-full pointer-events-none" startContent={<Upload size={16} />}>
+                                <Button color="primary" variant="flat" className="w-full pointer-events-none font-bold text-primary-foreground" startContent={<Upload size={16} />}>
                                     {design.wideLogoUrl ? 'Change Wide Logo' : 'Upload Wide Logo'}
                                 </Button>
                             </div>
@@ -269,7 +269,7 @@ export default function PassDesigner({ design, onChange, programName, restaurant
                                     onChange={handleFileSelect('hero')}
                                     className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
                                 />
-                                <Button variant="flat" className="w-full pointer-events-none" startContent={<Upload size={16} />}>
+                                <Button color="primary" variant="flat" className="w-full pointer-events-none font-bold text-primary-foreground" startContent={<Upload size={16} />}>
                                     {design.heroImageUrl ? 'Change Banner' : 'Upload Banner'}
                                 </Button>
                             </div>
@@ -296,7 +296,7 @@ export default function PassDesigner({ design, onChange, programName, restaurant
                                 onValueChange={(val) => onChange({ ...design, backgroundColor: val })}
                                 placeholder="#1a1a1a"
                                 size="sm"
-                                classNames={{ inputWrapper: "bg-zinc-700" }}
+                                classNames={{ inputWrapper: "bg-zinc-700", input: "text-white" }}
                             />
                         </div>
                     </CardBody>

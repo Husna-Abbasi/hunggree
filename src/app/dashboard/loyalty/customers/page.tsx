@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-browser";
-import { Button, Input, Spinner } from "@heroui/react";
-import { Users, Search, Store, RefreshCw, ArrowLeft, Wallet } from "lucide-react";
+import { Button, Input, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
+import { Users, Search, Store, RefreshCw, ArrowLeft, Wallet, QrCode, X, CheckCircle } from "lucide-react";
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LoyaltyCustomerCard from "@/components/LoyaltyCustomerCard";
@@ -22,6 +23,13 @@ export default function LoyaltyCustomersPage() {
     const [customers, setCustomers] = useState<any[]>([]);
     const [program, setProgram] = useState<any>(null);
     const [customerSearch, setCustomerSearch] = useState("");
+
+    // Scanner State
+    const [scannerOpen, setScannerOpen] = useState(false);
+    const [scannedCard, setScannedCard] = useState<any>(null);
+    const [pointsToAdd, setPointsToAdd] = useState("1");
+    const [processingPoints, setProcessingPoints] = useState(false);
+    const [scanError, setScanError] = useState("");
 
     const supabase = createClient();
     const router = useRouter();
@@ -134,6 +142,68 @@ export default function LoyaltyCustomersPage() {
         } finally {
             setRefreshingPasses(false);
         }
+
+    };
+
+    const handleScan = async (detectedCodes: any[]) => {
+        if (detectedCodes.length === 0) return;
+        const code = detectedCodes[0].rawValue;
+
+        // Stop scanning immediately by setting a temp state or checking if we already have a card
+        if (scannedCard) return;
+
+        try {
+            const res = await fetch('/api/loyalty/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                setScannedCard(data.card);
+                setScanError("");
+            } else {
+                setScanError(data.error || "Card not found");
+            }
+        } catch (error) {
+            setScanError("Failed to scan card");
+        }
+    };
+
+    const handleAddPoints = async () => {
+        if (!scannedCard) return;
+        setProcessingPoints(true);
+        try {
+            const res = await fetch('/api/loyalty/points', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cardId: scannedCard.id,
+                    pointsToAdd: parseInt(pointsToAdd)
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Successfully added ${pointsToAdd} points! New Balance: ${data.newBalance}`);
+                setScannerOpen(false);
+                setScannedCard(null);
+                setPointsToAdd("1");
+                fetchCustomers(); // Refresh list
+            } else {
+                alert(data.error || "Failed to add points");
+            }
+        } catch (error) {
+            alert("Error adding points");
+        } finally {
+            setProcessingPoints(false);
+        }
+    };
+
+    const closeScanner = () => {
+        setScannerOpen(false);
+        setScannedCard(null);
+        setScanError("");
     };
 
     const filteredRestaurants = restaurants.filter(r =>
@@ -225,6 +295,14 @@ export default function LoyaltyCustomersPage() {
                 >
                     Update Wallets
                 </Button>
+                <Button
+                    color="primary"
+                    className="font-bold text-black"
+                    startContent={<QrCode size={18} />}
+                    onPress={() => setScannerOpen(true)}
+                >
+                    Scan Pass
+                </Button>
             </div>
 
             {/* Stats */}
@@ -273,6 +351,133 @@ export default function LoyaltyCustomersPage() {
                     ))}
                 </div>
             )}
-        </div>
+
+
+            {/* Scanner Modal */}
+            <Modal
+                isOpen={scannerOpen}
+                onClose={closeScanner}
+                size="2xl"
+                classNames={{
+                    base: "bg-zinc-900 border border-white/10",
+                    header: "border-b border-white/10",
+                    footer: "border-t border-white/10"
+                }}
+            >
+                <ModalContent>
+                    <ModalHeader className="flex flex-col gap-1">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <QrCode /> {scannedCard ? "Customer Found" : "Scan Loyalty Pass"}
+                        </h2>
+                    </ModalHeader>
+                    <ModalBody className="py-6">
+                        {!scannedCard ? (
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="w-full max-w-sm aspect-square overflow-hidden rounded-2xl border-2 border-primary/50 relative bg-black">
+                                    <Scanner
+                                        onScan={handleScan}
+                                        components={{ finder: false }}
+                                        styles={{ container: { width: '100%', height: '100%' } }}
+                                    />
+                                    {/* Overlay Frame */}
+                                    <div className="absolute inset-0 border-[40px] border-black/50 pointer-events-none flex items-center justify-center">
+                                        <div className="w-48 h-48 border-2 border-white/50 rounded-lg relative">
+                                            <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-primary -mt-1 -ml-1"></div>
+                                            <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-primary -mt-1 -mr-1"></div>
+                                            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-primary -mb-1 -ml-1"></div>
+                                            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-primary -mb-1 -mr-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {scanError && (
+                                    <p className="text-red-400 font-bold bg-red-500/10 px-4 py-2 rounded-lg">
+                                        {scanError}
+                                    </p>
+                                )}
+                                <p className="text-gray-400 text-sm">Point the camera at the customer's Google Wallet pass QR code.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                                {/* Customer Details Card */}
+                                <div className="bg-zinc-800/50 p-6 rounded-2xl border border-white/5 flex items-center gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary font-black text-2xl">
+                                        {scannedCard.memberName.charAt(0)}
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-white">{scannedCard.memberName}</h3>
+                                        <p className="text-gray-400">{scannedCard.phoneNumber}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-3xl font-black text-white">{scannedCard.currentPoints}</p>
+                                        <p className="text-xs uppercase tracking-wider text-gray-500">Current Points</p>
+                                    </div>
+                                </div>
+
+                                {/* Rewards Status */}
+                                {scannedCard.currentPoints >= scannedCard.rewardThreshold && (
+                                    <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-xl flex items-center gap-3">
+                                        <CheckCircle className="text-green-500 fill-green-500/20" size={24} />
+                                        <div>
+                                            <p className="font-bold text-green-400">Reward Available!</p>
+                                            <p className="text-xs text-green-300/80">Customer has reached the threshold.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Add Points Form */}
+                                <div className="space-y-4 pt-4 border-t border-white/10">
+                                    <h4 className="font-bold text-gray-400 uppercase tracking-wider text-sm">Add Points / Visits</h4>
+                                    <div className="flex gap-4">
+                                        <Input
+                                            type="number"
+                                            label="Points to Add"
+                                            value={pointsToAdd}
+                                            onChange={(e) => setPointsToAdd(e.target.value)}
+                                            classNames={{
+                                                inputWrapper: "bg-zinc-700 hover:bg-zinc-600 transition-colors group-data-[focus=true]:bg-zinc-600",
+                                                input: "!text-white text-lg font-bold placeholder:text-zinc-400",
+                                                label: "!text-zinc-300"
+                                            }}
+                                        />
+                                        <Button
+                                            color="primary"
+                                            size="lg"
+                                            className="h-14 px-8 font-bold text-black"
+                                            onPress={handleAddPoints}
+                                            isLoading={processingPoints}
+                                        >
+                                            Add {pointsToAdd} Points
+                                        </Button>
+                                    </div>
+                                    <div className="flex gap-2 justify-center">
+                                        {[1, 2, 5, 10, -10].map(val => (
+                                            <Button
+                                                key={val}
+                                                size="sm"
+                                                variant="flat"
+                                                className="bg-zinc-700 hover:bg-zinc-600 !text-white font-bold"
+                                                onPress={() => setPointsToAdd(val.toString())}
+                                            >
+                                                {val > 0 ? `+${val}` : val}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="flat" className="bg-white/10 text-white" onPress={() => setScannedCard(null)}>
+                            Scan Another
+                        </Button>
+                        <Button color="danger" variant="light" onPress={closeScanner}>
+                            Close
+                        </Button>
+                    </ModalFooter>
+
+                </ModalContent>
+
+            </Modal>
+        </div >
     );
 }
