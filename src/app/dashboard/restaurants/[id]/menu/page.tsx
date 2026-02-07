@@ -66,7 +66,11 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
             .single();
 
         if (!rest) {
-            router.push('/dashboard');
+            console.error("Failed to fetch restaurant:", restaurantId);
+            // DEBUG: Show why it failed
+            const { data: user } = await supabase.auth.getUser();
+            alert(`Debug: Could not load restaurant.\nRest ID: ${restaurantId}\nUser ID: ${user.user?.id}\nError: Access Denied or Not Found.`);
+            // router.push('/dashboard'); // Commented out for debugging
             return;
         }
         setRestaurant(rest);

@@ -49,6 +49,14 @@ export default function DashboardPage() {
                 return;
             }
             setSession(session);
+
+            // Redirect Agents to Agent Dashboard
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+            if (profile?.role === 'agent') {
+                router.push('/dashboard/agent');
+                return;
+            }
+
             fetchRestaurants(session.user.id);
         };
 

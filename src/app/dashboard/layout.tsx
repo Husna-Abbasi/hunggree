@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { useRouter, usePathname } from "next/navigation";
 import { Button, User, Chip, Spinner } from "@heroui/react";
-import { LogOut, Store, ShieldCheck, ListOrdered, Settings, Menu, X, Gift, Users } from "lucide-react";
+import { LogOut, Store, ShieldCheck, ListOrdered, Settings, Menu, X, Gift, Users, Briefcase } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -133,15 +133,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <nav className="flex flex-col gap-2 flex-grow">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2 mb-2">Main Menu</p>
 
-                    <Button
-                        variant={pathname === '/dashboard' ? "solid" : "light"}
-                        color={pathname === '/dashboard' ? "primary" : "default"}
-                        className={`w-full justify-start font-medium ${pathname === '/dashboard' ? "text-white" : "text-gray-400 hover:text-white"}`}
-                        startContent={<Store size={18} />}
-                        onPress={() => router.push('/dashboard')}
-                    >
-                        Restaurants
-                    </Button>
+                    {profile?.role === 'agent' ? (
+                        <Button
+                            variant={pathname === '/dashboard/agent' ? "solid" : "light"}
+                            color={pathname === '/dashboard/agent' ? "primary" : "default"}
+                            className={`w-full justify-start font-medium ${pathname === '/dashboard/agent' ? "text-white" : "text-gray-400 hover:text-white"}`}
+                            startContent={<Store size={18} />}
+                            onPress={() => router.push('/dashboard/agent')}
+                        >
+                            Restaurants
+                        </Button>
+                    ) : (
+                        <Button
+                            variant={pathname === '/dashboard' ? "solid" : "light"}
+                            color={pathname === '/dashboard' ? "primary" : "default"}
+                            className={`w-full justify-start font-medium ${pathname === '/dashboard' ? "text-white" : "text-gray-400 hover:text-white"}`}
+                            startContent={<Store size={18} />}
+                            onPress={() => router.push('/dashboard')}
+                        >
+                            Restaurants
+                        </Button>
+                    )}
+
+
 
                     {profile?.role === 'admin' && (
                         <Button
@@ -160,29 +174,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </Button>
                     )}
 
-                    <Button
-                        variant={pathname === '/dashboard/loyalty' ? "solid" : "light"}
-                        color={pathname === '/dashboard/loyalty' ? "primary" : "default"}
-                        className={`w-full justify-start font-medium ${pathname === '/dashboard/loyalty' ? "text-white" : "text-gray-400 hover:text-white"}`}
-                        startContent={<Gift size={18} />}
-                        onPress={() => router.push('/dashboard/loyalty')}
-                    >
-                        Loyalty Program
-                    </Button>
+                    {profile?.role !== 'agent' && (
+                        <>
+                            <Button
+                                variant={pathname === '/dashboard/loyalty' ? "solid" : "light"}
+                                color={pathname === '/dashboard/loyalty' ? "primary" : "default"}
+                                className={`w-full justify-start font-medium ${pathname === '/dashboard/loyalty' ? "text-white" : "text-gray-400 hover:text-white"}`}
+                                startContent={<Gift size={18} />}
+                                onPress={() => router.push('/dashboard/loyalty')}
+                            >
+                                Loyalty Program
+                            </Button>
 
-                    <Button
-                        variant={pathname === '/dashboard/loyalty/customers' ? "solid" : "light"}
-                        color={pathname === '/dashboard/loyalty/customers' ? "primary" : "default"}
-                        className={`w-full justify-start font-medium ${pathname === '/dashboard/loyalty/customers' ? "text-white" : "text-gray-400 hover:text-white"}`}
-                        startContent={<Users size={18} />}
-                        onPress={() => router.push('/dashboard/loyalty/customers')}
-                    >
-                        Manage Customers
-                    </Button>
+                            <Button
+                                variant={pathname === '/dashboard/loyalty/customers' ? "solid" : "light"}
+                                color={pathname === '/dashboard/loyalty/customers' ? "primary" : "default"}
+                                className={`w-full justify-start font-medium ${pathname === '/dashboard/loyalty/customers' ? "text-white" : "text-gray-400 hover:text-white"}`}
+                                startContent={<Users size={18} />}
+                                onPress={() => router.push('/dashboard/loyalty/customers')}
+                            >
+                                Manage Customers
+                            </Button>
 
-                    <Button variant="light" className="justify-start text-gray-400 hover:text-white" startContent={<ListOrdered size={18} />}>
-                        Orders <Chip size="sm" color="danger" variant="flat" className="ml-auto h-5">0</Chip>
-                    </Button>
+                            <Button variant="light" className="justify-start text-gray-400 hover:text-white" startContent={<ListOrdered size={18} />}>
+                                Orders <Chip size="sm" color="danger" variant="flat" className="ml-auto h-5">0</Chip>
+                            </Button>
+                        </>
+                    )}
 
                     {profile?.role === 'admin' && (
                         <Button
