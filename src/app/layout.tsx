@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 
+import GoogleTagManager from '@/components/GoogleTagManager';
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const viewport: Viewport = {
@@ -28,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID || ''} />
         <Providers>
           {children}
         </Providers>
