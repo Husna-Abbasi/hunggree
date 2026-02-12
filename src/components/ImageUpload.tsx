@@ -5,6 +5,7 @@ import { Button, Input, Spinner } from "@heroui/react";
 import { Image as ImageIcon, Upload, X, Link as LinkIcon, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { optimizeImage } from "@/lib/utils";
+import { createClient } from "@/lib/supabase-browser";
 
 interface ImageUploadProps {
     value?: string | null;
@@ -50,22 +51,27 @@ export default function ImageUpload({
         }
 
         setIsUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-
         try {
-            const res = await fetch("/api/upload/ipfs", {
-                method: "POST",
-                body: formData,
-            });
+            const timestamp = new Date().getTime();
+            const cleanName = file.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+            const filePath = `uploads/${timestamp}-${cleanName}`;
 
-            const data = await res.json();
+            const supabase = createClient();
+            const { data, error } = await supabase.storage
+                .from('menu_items')
+                .upload(filePath, file, {
+                    upsert: false
+                });
 
-            if (!res.ok) {
-                throw new Error(data.error || "Upload failed");
+            if (error) {
+                throw error;
             }
 
-            onChange(data.url);
+            const { data: { publicUrl } } = supabase.storage
+                .from('menu_items')
+                .getPublicUrl(filePath);
+
+            onChange(publicUrl);
             setShowUrlInput(false);
         } catch (err: any) {
             console.error("Upload failed", err);
@@ -172,7 +178,7 @@ export default function ImageUpload({
                         <div className="flex flex-col items-center gap-2">
                             <Spinner size="lg" color="primary" />
                             <p className="text-sm text-gray-400 animate-pulse">
-                                {isGenerating ? "Generating AI Image..." : "Uploading to IPFS..."}
+                                {isGenerating ? "Generating AI Image..." : "Uploading..."}
                             </p>
                         </div>
                     ) : (
@@ -274,11 +280,6 @@ export default function ImageUpload({
                             </Button>
                         </div>
                     </div>
-                    {value?.includes("pinata") && (
-                        <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur rounded text-[10px] text-blue-300 font-mono border border-blue-500/30">
-                            IPFS Hosted
-                        </div>
-                    )}
                     {value?.includes("ai-gen") && (
                         <div className="absolute top-2 left-2 px-2 py-0.5 bg-purple-500/20 backdrop-blur rounded-full text-[10px] text-purple-300 font-bold border border-purple-500/30 flex items-center gap-1">
                             <Sparkles size={10} /> AI Generated

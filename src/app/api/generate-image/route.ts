@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadToPinata } from "@/lib/pinata";
+import { createClient } from "@/lib/supabase-server";
+import sharp from "sharp";
 
 export async function POST(req: NextRequest) {
     try {
@@ -51,15 +52,40 @@ export async function POST(req: NextRequest) {
         const mimeType = prediction.mimeType || "image/png";
 
         const buffer = Buffer.from(base64Image, 'base64');
-        const file = new Blob([buffer], { type: mimeType });
+
+        // Compress image using sharp
+        const compressedBuffer = await sharp(buffer)
+            .resize({ width: 1024, withoutEnlargement: true }) // Resize to max 1024px width
+            .webp({ quality: 80 }) // Compress to 80% quality WebP
+            .toBuffer();
 
         const timestamp = new Date().getTime();
         const cleanTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase();
-        const filename = "ai-gen-" + cleanTitle + "-" + timestamp + ".png";
+        const filename = "ai-gen-" + cleanTitle + "-" + timestamp + ".webp"; // Changed extension to .webp
+        const filePath = `ai-generated/${filename}`;
 
-        const ipfsUrl = await uploadToPinata(file, filename);
+        // Upload to Supabase Storage
+        const supabase = await createClient();
+        const { data: uploadData, error: uploadError } = await supabase
+            .storage
+            .from('menu_items')
+            .upload(filePath, compressedBuffer, {
+                contentType: 'image/webp',
+                upsert: false
+            });
 
-        return NextResponse.json({ url: ipfsUrl });
+        if (uploadError) {
+            console.error('Supabase Storage Upload Error:', uploadError);
+            throw new Error('Failed to upload image to storage');
+        }
+
+        // Get Public URL
+        const { data: { publicUrl } } = supabase
+            .storage
+            .from('menu_items')
+            .getPublicUrl(filePath);
+
+        return NextResponse.json({ url: publicUrl });
 
     } catch (error: any) {
         console.error("Generation error:", error);

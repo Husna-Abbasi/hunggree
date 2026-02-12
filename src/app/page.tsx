@@ -7,6 +7,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Zap, MessageSquare, ShieldCheck, Star, Users, ArrowRight, Play, Menu, X } from "lucide-react";
 
+import LandingSearch from "@/components/LandingSearch";
+
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -256,6 +258,8 @@ export default function Home() {
             <p className="text-black/50 text-xs font-bold uppercase tracking-widest mt-8">No credit card required • Unlimited items • 24/7 VIP Support</p>
           </div>
         </section>
+
+        <LandingSearch />
       </main>
 
       <footer className="py-12 lg:py-20 border-t border-white/5 bg-zinc-950">
