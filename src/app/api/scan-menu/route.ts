@@ -6,13 +6,14 @@ import { NextRequest, NextResponse } from 'next/server';
 const EXTRACTION_PROMPT = `You are a menu extraction assistant. Analyze restaurant menu images and extract all menu items.
 
 Return the data in this exact JSON format:
-{"categories":[{"name":"Category Name","items":[{"name":"Item Name","description":"Item description","price":12.99,"category":"Category Name"}]}]}
+{"categories":[{"name":"Category Name","items":[{"name":"Item Name","description":"Item description","price":12.99,"category":"Category Name","variations":[{"name":"Small","price":9.99},{"name":"Large","price":14.99}]}]}]}
 
 Rules:
 - Extract ALL items visible.
 - Group by category.
 - Prices = numbers (0 if unknown).
 - Descriptions = max 10 words.
+- If an item has size or price variations (e.g. Small/Large, Half/Full, pieces), extract them into the "variations" array for that item. If no variations, omit the "variations" array or leave it empty.
 - IMPORTANT: Return MINIFIED JSON (no indentation/newlines) to save space.
 - NO Markdown.`;
 

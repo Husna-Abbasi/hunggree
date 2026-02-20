@@ -42,6 +42,7 @@ interface Item {
     is_available: boolean;
     order_count: number;
     prep_time?: string; // Mocked for now since not in schema
+    variations?: { name: string; price: number }[];
 }
 
 export default function MenuPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -264,14 +265,19 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
         return result;
     }, [categories, searchQuery, selectedCategoryId, sortBy, selectedPriceRange]);
 
-    const handleAddToCart = (item: any) => {
+    const handleAddToCart = (item: any, variation?: { name: string, price: number }) => {
+        const cartId = variation ? `${item.id}-${variation.name}` : item.id;
+        const name = variation ? `${item.name} (${variation.name})` : item.name;
+        const price = variation ? variation.price : item.price;
+
         addItem({
-            id: item.id,
-            name: item.name,
+            id: cartId,
+            name: name,
             description: item.description,
-            price: item.price,
+            price: price,
             image: item.image_url,
-            quantity: 1
+            quantity: 1,
+            options: variation ? { variation: variation.name } : undefined
         });
     };
 
@@ -297,12 +303,17 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
             if (orderError) throw orderError;
 
             // 2. Create order items
-            const orderItemsData = cartItems.map(item => ({
-                order_id: order.id,
-                item_id: item.id,
-                quantity: item.quantity,
-                price_at_time: item.price
-            }));
+            const orderItemsData = cartItems.map(item => {
+                // The actual item ID is a UUID (36 chars)
+                const realItemId = item.id.substring(0, 36);
+                return {
+                    order_id: order.id,
+                    item_id: realItemId,
+                    quantity: item.quantity,
+                    price_at_time: item.price,
+                    options: item.options || null
+                };
+            });
 
             const { error: itemsError } = await supabase
                 .from('order_items')
@@ -693,15 +704,30 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="pt-4 sm:pt-10 mt-auto px-1 sm:px-2">
-                                                        <Button
-                                                            radius="full"
-                                                            className="w-full bg-foreground text-background hover:bg-primary hover:text-white font-black text-[10px] sm:text-sm uppercase tracking-[0.2em] h-10 sm:h-16 transition-all duration-500 shadow-xl active:scale-95"
-                                                            onPress={() => handleAddToCart(item)}
-                                                            startContent={<Plus size={14} className="sm:w-5 sm:h-5" />}
-                                                        >
-                                                            Add
-                                                        </Button>
+                                                    <div className="pt-4 sm:pt-10 mt-auto px-1 sm:px-2 flex flex-col gap-2">
+                                                        {item.variations && item.variations.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-2 w-full">
+                                                                {item.variations.map((v: any, i: number) => (
+                                                                    <Button
+                                                                        key={i}
+                                                                        radius="full"
+                                                                        className="flex-1 bg-foreground text-background hover:bg-primary hover:text-white font-black text-[9px] sm:text-[10px] uppercase tracking-[0.1em] h-10 transition-all duration-500 shadow-xl active:scale-95 px-2 min-w-[80px]"
+                                                                        onPress={() => handleAddToCart(item, v)}
+                                                                    >
+                                                                        {v.name} ({formatPrice(v.price)})
+                                                                    </Button>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <Button
+                                                                radius="full"
+                                                                className="w-full bg-foreground text-background hover:bg-primary hover:text-white font-black text-[10px] sm:text-sm uppercase tracking-[0.2em] h-10 sm:h-16 transition-all duration-500 shadow-xl active:scale-95"
+                                                                onPress={() => handleAddToCart(item)}
+                                                                startContent={<Plus size={14} className="sm:w-5 sm:h-5" />}
+                                                            >
+                                                                Add
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -741,22 +767,38 @@ export default function MenuPage({ params }: { params: Promise<{ slug: string }>
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3 sm:gap-8 shrink-0 ml-4">
-                                                        <div className="text-right">
-                                                            <p className="text-base sm:text-3xl font-black text-foreground whitespace-nowrap">
-                                                                <span className="text-secondary text-[11px] sm:text-sm mr-1 font-bold">{restaurant.currency}</span>
-                                                                {formatPrice(item.price)}
-                                                            </p>
-                                                        </div>
-                                                        <Button
-                                                            isIconOnly
-                                                            radius="full"
-                                                            size="sm"
-                                                            className="w-10 h-10 sm:w-16 sm:h-16 bg-foreground text-background hover:bg-primary hover:text-white transition-all duration-500 shadow-lg active:scale-95"
-                                                            onPress={() => handleAddToCart(item)}
-                                                        >
-                                                            <Plus size={18} className="sm:w-6 sm:h-6" />
-                                                        </Button>
+                                                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4 shrink-0 mt-2 sm:mt-0">
+                                                        {item.variations && item.variations.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-2 justify-end w-full sm:w-auto">
+                                                                {item.variations.map((v: any, i: number) => (
+                                                                    <Button
+                                                                        key={i}
+                                                                        radius="full"
+                                                                        size="sm"
+                                                                        className="bg-foreground text-background hover:bg-primary hover:text-white font-black text-[9px] uppercase tracking-[0.1em] transition-all duration-500 shadow-lg active:scale-95 px-3"
+                                                                        onPress={() => handleAddToCart(item, v)}
+                                                                    >
+                                                                        {v.name} (+{formatPrice(v.price)})
+                                                                    </Button>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-3 sm:gap-6">
+                                                                <p className="text-base sm:text-2xl font-black text-foreground whitespace-nowrap">
+                                                                    <span className="text-secondary text-[11px] sm:text-sm mr-1 font-bold">{restaurant.currency}</span>
+                                                                    {formatPrice(item.price)}
+                                                                </p>
+                                                                <Button
+                                                                    isIconOnly
+                                                                    radius="full"
+                                                                    size="sm"
+                                                                    className="w-10 h-10 sm:w-14 sm:h-14 bg-foreground text-background hover:bg-primary hover:text-white transition-all duration-500 shadow-lg active:scale-95"
+                                                                    onPress={() => handleAddToCart(item)}
+                                                                >
+                                                                    <Plus size={18} className="sm:w-5 sm:h-5" />
+                                                                </Button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

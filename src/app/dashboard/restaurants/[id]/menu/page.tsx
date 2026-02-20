@@ -27,6 +27,7 @@ interface MenuItem {
     image_url: string | null;
     is_available: boolean;
     display_order: number;
+    variations?: { name: string; price: number }[];
 }
 
 export default function MenuManagementPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,7 +48,7 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
 
     // Form states
     const [categoryForm, setCategoryForm] = useState({ name: "", description: "" });
-    const [itemForm, setItemForm] = useState({ name: "", description: "", price: "", image_url: "", is_available: true });
+    const [itemForm, setItemForm] = useState<{ name: string, description: string, price: string, image_url: string, is_available: boolean, variations: { name: string, price: number }[] }>({ name: "", description: "", price: "", image_url: "", is_available: true, variations: [] });
     const [isSaving, setIsSaving] = useState(false);
 
     const router = useRouter();
@@ -184,11 +185,12 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                 description: item.description || "",
                 price: item.price.toString(),
                 image_url: item.image_url || "",
-                is_available: item.is_available
+                is_available: item.is_available,
+                variations: item.variations || []
             });
         } else {
             setEditingItem(null);
-            setItemForm({ name: "", description: "", price: "", image_url: "", is_available: true });
+            setItemForm({ name: "", description: "", price: "", image_url: "", is_available: true, variations: [] });
         }
         setShowItemModal(true);
     };
@@ -220,7 +222,8 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                     description: itemForm.description || null,
                     price: priceNum,
                     image_url: itemForm.image_url || null,
-                    is_available: itemForm.is_available
+                    is_available: itemForm.is_available,
+                    variations: itemForm.variations
                 })
                 .eq('id', editingItem.id);
         } else {
@@ -235,7 +238,8 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                 price: priceNum,
                 image_url: itemForm.image_url || null,
                 is_available: itemForm.is_available,
-                display_order: newOrder
+                display_order: newOrder,
+                variations: itemForm.variations
             });
         }
 
@@ -495,6 +499,15 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                                                 {item.description && (
                                                     <p className="text-xs text-gray-400 mb-3">{item.description}</p>
                                                 )}
+                                                {item.variations && item.variations.length > 0 && (
+                                                    <div className="mb-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex flex-wrap gap-1.5 text-[10px]">
+                                                        {item.variations.map((v, vIdx) => (
+                                                            <span key={vIdx} className="bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded">
+                                                                {v.name}: {restaurant?.currency || '$'}{v.price.toFixed(2)}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => openItemModal(item)}
@@ -623,7 +636,65 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                                     itemCategory={categories.find(c => c.id === activeCategory)?.name}
                                 />
                             </div>
-                            <div className="flex items-center gap-3">
+
+                            {/* Variations Section */}
+                            <div className="border-t border-white/10 pt-4 mt-2">
+                                <div className="flex items-center justify-between mb-2">
+                                    <label className="block text-sm font-medium text-gray-300">Variations (e.g. Sizes)</label>
+                                    <button
+                                        onClick={() => setItemForm({ ...itemForm, variations: [...(itemForm.variations || []), { name: '', price: 0 }] })}
+                                        className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300"
+                                    >
+                                        <Plus size={12} /> Add Variation
+                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    {itemForm.variations?.map((variation, vIdx) => (
+                                        <div key={vIdx} className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Name (e.g. Small)"
+                                                value={variation.name}
+                                                onChange={(e) => {
+                                                    const newVars = [...itemForm.variations];
+                                                    newVars[vIdx].name = e.target.value;
+                                                    setItemForm({ ...itemForm, variations: newVars });
+                                                }}
+                                                className="flex-1 px-3 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                            <div className="relative w-24">
+                                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{restaurant?.currency || '$'}</span>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={variation.price}
+                                                    onChange={(e) => {
+                                                        const newVars = [...itemForm.variations];
+                                                        newVars[vIdx].price = parseFloat(e.target.value) || 0;
+                                                        setItemForm({ ...itemForm, variations: newVars });
+                                                    }}
+                                                    className="w-full pl-6 pr-2 py-2 bg-zinc-800 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const newVars = itemForm.variations.filter((_, i) => i !== vIdx);
+                                                    setItemForm({ ...itemForm, variations: newVars });
+                                                }}
+                                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {(!itemForm.variations || itemForm.variations.length === 0) && (
+                                        <p className="text-xs text-gray-500 italic">No variations added. Item will use base price.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 pt-2">
                                 <input
                                     type="checkbox"
                                     id="is_available"

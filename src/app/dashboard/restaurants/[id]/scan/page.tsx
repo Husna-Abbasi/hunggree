@@ -16,6 +16,7 @@ interface ExtractedItem {
     description: string;
     price: number;
     category: string;
+    variations?: { name: string; price: number }[];
 }
 
 interface ExtractedCategory {
@@ -294,7 +295,8 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
                     description: item.description || null,
                     price: item.price,
                     is_available: true,
-                    display_order: idx
+                    display_order: idx,
+                    variations: item.variations || []
                 }));
 
                 const { error: itemsError } = await supabase
@@ -582,6 +584,16 @@ export default function ScanMenuPage({ params }: { params: Promise<{ id: string 
                                                         </button>
                                                     </div>
                                                 </div>
+                                                {item.variations && item.variations.length > 0 && (
+                                                    <div className="mt-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 flex flex-wrap gap-2 text-xs">
+                                                        <span className="text-blue-400 font-semibold items-center flex">Variations:</span>
+                                                        {item.variations.map((v, vIdx) => (
+                                                            <span key={vIdx} className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded">
+                                                                {v.name}: {restaurant?.currency || '$'}{v.price.toFixed(2)}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
